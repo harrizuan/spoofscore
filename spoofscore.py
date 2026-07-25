@@ -706,141 +706,263 @@ def generate_remediation(result):
 # Output Formatting
 # ═══════════════════════════════════════════════════════════════
 
-GRADE_COLOR = {"A": "\033[92m", "B": "\033[96m", "C": "\033[93m", "D": "\033[91m", "F": "\033[31m"}
-RESET = "\033[0m"
-BOLD = "\033[1m"
-DIM = "\033[2m"
+R  = "\033[0m"
+B  = "\033[1m"
+DM = "\033[2m"
+UL = "\033[4m"
+RD = "\033[91m"
+GR = "\033[92m"
+YL = "\033[93m"
+BL = "\033[94m"
+MG = "\033[95m"
+CY = "\033[96m"
+WH = "\033[97m"
+BG_RD = "\033[41m"
+BG_GR = "\033[42m"
+BG_YL = "\033[43m"
+BG_BL = "\033[44m"
+BG_DK = "\033[48;5;236m"
 
-def fmt_bool(val):
-    return f"\033[92mYes{RESET}" if val else f"\033[91mNo{RESET}"
+GRADE_STYLE = {
+    "A": (GR, "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓"),
+    "B": (CY, "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░"),
+    "C": (YL, "▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░"),
+    "D": (RD, "▓▓▓▓▓▓▓▓░░░░░░░░░░░░"),
+    "F": (RD, "▓▓▓▓░░░░░░░░░░░░░░░░"),
+}
+
+BANNER = f"""
+{CY}   ┌─────────────────────────────────────────────────────┐{R}
+{CY}   │{R}                                                     {CY}│{R}
+{CY}   │{R}   {B}{WH}███████{R} {B}{WH}██████{R}   {B}{WH}██████{R}   {B}{WH}██████{R}  {B}{WH}███████{R}          {CY}│{R}
+{CY}   │{R}   {CY}██{DM}╔════╝{R}{CY}██{DM}╔══{R}{CY}██{DM}╗{R}{CY}██{DM}╔═══{R}{CY}██{DM}╗{R}{CY}██{DM}╔═══{R}{CY}██{DM}╗{R}{CY}██{DM}╔════╝{R}          {CY}│{R}
+{CY}   │{R}   {B}{CY}███████{DM}╗{R}{B}{CY}██████{DM}╔╝{R}{B}{CY}██{DM}║{R}   {B}{CY}██{DM}║{R}{B}{CY}██{DM}║{R}   {B}{CY}██{DM}║{R}{B}{CY}█████{DM}╗{R}            {CY}│{R}
+{CY}   │{R}   {DM}╚════{R}{CY}██{DM}║{R}{CY}██{DM}╔═══╝{R} {CY}██{DM}║{R}   {CY}██{DM}║{R}{CY}██{DM}║{R}   {CY}██{DM}║{R}{CY}██{DM}╔══╝{R}            {CY}│{R}
+{CY}   │{R}   {B}{CY}███████{DM}║{R}{B}{CY}██{DM}║{R}     {DM}╚{R}{B}{CY}██████{DM}╔╝{R}{DM}╚{R}{B}{CY}██████{DM}╔╝{R}{B}{CY}██{DM}║{R}              {CY}│{R}
+{CY}   │{R}   {DM}╚══════╝╚═╝      ╚═════╝  ╚═════╝ ╚═╝{R}              {CY}│{R}
+{CY}   │{R}                                                     {CY}│{R}
+{CY}   │{R}   {B}SpoofScore{R} {DM}v{__version__}{R}                                  {CY}│{R}
+{CY}   │{R}   {DM}Can someone impersonate your domain via email?{R}     {CY}│{R}
+{CY}   │{R}   {DM}github.com/harrizuan/spoofscore{R}                    {CY}│{R}
+{CY}   │{R}                                                     {CY}│{R}
+{CY}   └─────────────────────────────────────────────────────┘{R}
+"""
+
+def score_bar(score, width=20):
+    filled = round(score / 100 * width)
+    empty = width - filled
+    color, _ = GRADE_STYLE.get(
+        "A" if score >= 80 else "B" if score >= 60 else "C" if score >= 40 else "D" if score >= 20 else "F",
+        (CY, "")
+    )
+    return f"{color}{'█' * filled}{DM}{'░' * empty}{R}"
+
+def dot(ok):
+    return f"{GR}●{R}" if ok else f"{RD}●{R}"
+
+def tag(ok):
+    return f"{GR}✓{R}" if ok else f"{RD}✗{R}"
 
 def fmt_policy(pol):
-    if pol == "reject":     return f"\033[92mreject{RESET}"
-    if pol == "quarantine": return f"\033[93mquarantine{RESET}"
-    if pol == "none":       return f"\033[91mnone (SPOOFABLE){RESET}"
-    return f"\033[91mmissing (SPOOFABLE){RESET}"
+    if pol == "reject":     return f"{GR}{B}reject{R}"
+    if pol == "quarantine": return f"{YL}{B}quarantine{R}"
+    if pol == "none":       return f"{RD}{B}none{R} {DM}(monitor only){R}"
+    return f"{RD}{B}missing{R}"
 
+def fmt_spf(mech):
+    if mech == "hardfail":   return f"{GR}{B}-all{R} {DM}(hardfail){R}"
+    if mech == "softfail":   return f"{YL}{B}~all{R} {DM}(softfail){R}"
+    if mech == "permissive": return f"{RD}{B}+all{R} {DM}(PERMISSIVE){R}"
+    if mech == "neutral":    return f"{YL}{B}?all{R} {DM}(neutral){R}"
+    if mech == "present":    return f"{YL}present{R}"
+    return f"{RD}{B}missing{R}"
+
+def section(icon, title):
+    print(f"\n   {CY}┌{'─'*52}┐{R}")
+    print(f"   {CY}│{R} {icon}  {B}{WH}{title}{R}")
+    print(f"   {CY}└{'─'*52}┘{R}")
+
+def row(label, value, extra=""):
+    label_padded = f"{label:<16}"
+    extra_str = f"  {DM}{extra}{R}" if extra else ""
+    print(f"      {DM}{label_padded}{R} {value}{extra_str}")
 
 def print_report(r):
-    gc = GRADE_COLOR.get(r["grade"], "")
-    print(f"\n{'='*60}")
-    print(f"  {BOLD}{r['domain']}{RESET}")
-    print(f"  Score: {gc}{BOLD}{r['score']}/100  Grade {r['grade']}{RESET}")
-    if r["spoofable"]:
-        print(f"  \033[91m{BOLD}*** SPOOFABLE ***{RESET}")
-    print(f"{'='*60}")
+    ch = r["spf_chain"]
+    w = SCORE_WEIGHTS
+    score = r["score"]
+    grade = r["grade"]
+    gc, _ = GRADE_STYLE.get(grade, (CY, ""))
 
-    print(f"\n  {BOLD}Layer 1: DNS Authentication{RESET}")
-    print(f"    MX Record     : {fmt_bool(r['mx']['has_mx'])}", end="")
-    if r["mx"]["mx_primary"]:
-        print(f"  ({r['mx']['mx_primary']})")
+    print(f"\n   {CY}{'━' * 54}{R}")
+    print(f"   {B}{WH}{r['domain']}{R}")
+    print()
+    print(f"      Score    {score_bar(score)}  {gc}{B}{score}/100{R}")
+    print(f"      Grade    {gc}{B}{'▌' * 3} {grade} {'▐' * 3}{R}")
+    if r["spoofable"]:
+        print(f"      Verdict  {RD}{B}⚠ SPOOFABLE{R}")
     else:
-        print()
-    print(f"    SPF            : {r['spf']['spf_mechanism']}", end="")
+        print(f"      Verdict  {GR}{B}✓ PROTECTED{R}")
+    print(f"   {CY}{'━' * 54}{R}")
+
+    # Layer 1: DNS Authentication
+    section("🔐", "Layer 1 — DNS Authentication")
+    row("MX Record", tag(r["mx"]["has_mx"]),
+        r["mx"]["mx_primary"] or "no MX")
+    row("SPF", fmt_spf(r["spf"]["spf_mechanism"]))
     if r["spf"]["spf_record"]:
         rec = r["spf"]["spf_record"]
-        print(f"  ({rec[:70]}{'...' if len(rec)>70 else ''})")
-    else:
-        print()
-    print(f"    DMARC Policy   : {fmt_policy(r['dmarc']['dmarc_policy'])}")
+        print(f"      {DM}{'':>16} {rec[:60]}{'...' if len(rec)>60 else ''}{R}")
+    row("DMARC", fmt_policy(r["dmarc"]["dmarc_policy"]))
     if r["dmarc"]["dmarc_rua"]:
-        print(f"    DMARC Reporting: {r['dmarc']['dmarc_rua'][:60]}")
+        row("Reporting", f"{DM}{r['dmarc']['dmarc_rua'][:55]}{R}")
     dkim_sels = r["dkim"]["dkim_selectors"]
-    print(f"    DKIM           : {fmt_bool(r['dkim']['dkim_found'])}", end="")
-    if dkim_sels:
-        print(f"  (selectors: {', '.join(dkim_sels)})")
+    row("DKIM", tag(r["dkim"]["dkim_found"]),
+        f"selectors: {', '.join(dkim_sels)}" if dkim_sels else "none found")
+    if r["dkim"].get("dkim_wildcard"):
+        print(f"      {YL}{'':>16} ⚠ Wildcard _domainkey detected (catch-all){R}")
+
+    # Layer 2: SMTP/TLS
+    section("🔒", "Layer 2 — SMTP/TLS Probing")
+    starttls_val = r["smtp"]["starttls"]
+    if starttls_val == "Yes":
+        row("STARTTLS", f"{GR}{B}Yes{R}")
+    elif starttls_val == "Blocked":
+        row("STARTTLS", f"{YL}Blocked{R}", "port 25 unreachable")
     else:
-        print()
+        row("STARTTLS", f"{RD}No{R}")
+    tls_v = r["smtp"]["tls_version"] or ""
+    if "1.3" in tls_v:
+        row("TLS Version", f"{GR}{B}{tls_v}{R}")
+    elif "1.2" in tls_v:
+        row("TLS Version", f"{CY}{tls_v}{R}")
+    elif tls_v:
+        row("TLS Version", f"{YL}{tls_v}{R}")
+    else:
+        row("TLS Version", f"{DM}—{R}")
+    row("Cipher", f"{r['smtp']['tls_cipher'] or '—'}")
 
-    print(f"\n  {BOLD}Layer 2: SMTP/TLS{RESET}")
-    print(f"    STARTTLS       : {r['smtp']['starttls']}")
-    print(f"    TLS Version    : {r['smtp']['tls_version'] or 'N/A'}")
-    print(f"    Cipher Suite   : {r['smtp']['tls_cipher'] or 'N/A'}")
+    # Layer 3: Mail Platform
+    section("📧", "Layer 3 — Mail Platform")
+    plat = r["platform"]
+    plat_icons = {
+        "Google Workspace": "Google", "Microsoft 365": "Microsoft",
+        "Amazon SES": "AWS SES", "ProtonMail": "Proton",
+    }
+    row("Provider", f"{B}{plat_icons.get(plat, plat)}{R}")
 
-    print(f"\n  {BOLD}Layer 3: Mail Platform{RESET}")
-    print(f"    Platform       : {r['platform']}")
-
-    print(f"\n  {BOLD}Layer 4: SPF Chain{RESET}")
-    ch = r["spf_chain"]
-    exceed = f"\033[91mYes (EXCEEDS RFC 7208 LIMIT){RESET}" if ch["spf_exceeds_limit"] else "\033[92mNo\033[0m"
-    print(f"    DNS Lookups    : {ch['spf_lookups']}/10  Exceeds limit: {exceed}")
-    void_ex = f"\033[91mYes (EXCEEDS RFC 7208 §4.6.4 LIMIT){RESET}" if ch.get("spf_void_exceeds") else "\033[92mNo\033[0m"
-    print(f"    Void Lookups   : {ch.get('spf_void_lookups', 0)}/2   Exceeds limit: {void_ex}")
-    print(f"    Chain Depth    : {ch['spf_chain_depth']}")
+    # Layer 4: SPF Chain
+    section("🔗", "Layer 4 — SPF Chain Analysis")
+    lookups = ch["spf_lookups"]
+    lookup_color = GR if lookups <= 7 else YL if lookups <= 10 else RD
+    row("DNS Lookups", f"{lookup_color}{B}{lookups}{R}{DM}/10{R}",
+        f"{RD}EXCEEDS RFC 7208{R}" if ch["spf_exceeds_limit"] else "")
+    void_c = ch.get("spf_void_lookups", 0)
+    void_color = GR if void_c <= 1 else YL if void_c <= 2 else RD
+    row("Void Lookups", f"{void_color}{B}{void_c}{R}{DM}/2{R}",
+        f"{RD}EXCEEDS §4.6.4{R}" if ch.get("spf_void_exceeds") else "")
+    row("Chain Depth", f"{ch['spf_chain_depth']}")
     if ch["spf_dangling"]:
-        print(f"    \033[91mDangling includes: {', '.join(ch['spf_dangling'])}{RESET}")
+        for dang in ch["spf_dangling"]:
+            print(f"      {RD}  ⚠ Dangling: {B}{dang}{R} {DM}(NXDOMAIN — takeover risk){R}")
 
-    print(f"\n  {BOLD}Layer 5: Transport & Reputation{RESET}")
-    print(f"    MTA-STS        : {fmt_bool(r['mta_sts'])}")
-    print(f"    DANE/TLSA      : {fmt_bool(r['dane'])}")
-    print(f"    BIMI           : {fmt_bool(r['bimi']['present'])}")
-    print(f"    TLS-RPT        : {fmt_bool(r['tls_rpt']['present'])}")
+    # Layer 5: Transport Security
+    section("🛡️ ", "Layer 5 — Transport & Reputation")
+    row("MTA-STS", tag(r["mta_sts"]), "RFC 8461")
+    row("DANE/TLSA", tag(r["dane"]), "RFC 7672")
+    row("BIMI", tag(r["bimi"]["present"]))
+    row("TLS-RPT", tag(r["tls_rpt"]["present"]))
     fcr = r.get("fcrdns", {})
     if fcr.get("ptr"):
-        verified_str = f"\033[92mVerified{RESET}" if fcr["verified"] else f"\033[91mMismatch{RESET}"
-        print(f"    FCrDNS         : {fcr['ptr']} ({verified_str})")
+        v = f"{GR}Verified{R}" if fcr["verified"] else f"{RD}Mismatch{R}"
+        row("FCrDNS", v, fcr["ptr"])
     else:
-        print(f"    FCrDNS         : \033[91mNo PTR{RESET}")
+        row("FCrDNS", f"{RD}No PTR{R}")
     rbl = r.get("rbl", {})
     if rbl.get("listed"):
-        print(f"    RBL Blocklist   : \033[91mLISTED on {len(rbl['listed'])} zone(s): {', '.join(rbl['listed'][:3])}{RESET}")
+        row("RBL Status", f"{RD}{B}LISTED{R}", f"{len(rbl['listed'])} zone(s)")
+        for zone in rbl["listed"][:3]:
+            print(f"      {RD}{'':>16} ● {zone}{R}")
     elif rbl.get("checked"):
-        print(f"    RBL Blocklist   : \033[92mClean ({rbl['checked']} zones checked){RESET}")
+        row("RBL Status", f"{GR}Clean{R}", f"{rbl['checked']} zones scanned")
     if r.get("sp_mismatch"):
-        print(f"    \033[91mWARNING: sp=none with p={r['dmarc']['dmarc_policy']} — subdomains are spoofable!{RESET}")
+        print(f"      {YL}  ⚠ sp=none with p={r['dmarc']['dmarc_policy']}{R} {DM}(subdomains spoofable){R}")
 
-    print(f"\n  {BOLD}Layer 6: Composite Score Breakdown{RESET}")
-    w = SCORE_WEIGHTS
+    # Layer 6: Score Breakdown
+    section("📊", "Layer 6 — Score Breakdown")
     dmarc_pts = w["dmarc"].get(r["dmarc"]["dmarc_policy"], 0)
     spf_pts = w["spf"].get(r["spf"]["spf_mechanism"], 0)
     dkim_pts = w["dkim"] if r["dkim"]["dkim_found"] else 0
     tls_pts = 0
     for pat, pts in w["tls"].items():
         if pat in r["smtp"]["tls_version"]:
-            tls_pts = pts; break
+            tls_pts = pts
+            break
     mta_pts = w["mta_sts"] if r["mta_sts"] else 0
     dane_pts = w["dane"] if r["dane"] else 0
     spf_pen = w["spf_exceed_penalty"] if ch["spf_exceeds_limit"] else 0
-
     perm_pen = w["permissive_spf_penalty"] if r["spf"]["spf_mechanism"] == "permissive" else 0
     void_pen = w["spf_void_penalty"] if ch.get("spf_void_exceeds") else 0
     rbl_pen = w["rbl_penalty"] if r.get("rbl", {}).get("listed") else 0
     sp_pen = w["sp_mismatch_penalty"] if r.get("sp_mismatch") else 0
 
-    print(f"    DMARC          : {dmarc_pts:+3d}/30  (p={r['dmarc']['dmarc_policy']})")
-    print(f"    SPF            : {spf_pts:+3d}/20  ({r['spf']['spf_mechanism']})")
-    if spf_pen:
-        print(f"    SPF lookup pen : {spf_pen:+3d}     (exceeds 10-lookup limit)")
-    if void_pen:
-        print(f"    SPF void pen   : {void_pen:+3d}     (>2 void lookups, RFC 7208)")
-    if perm_pen:
-        print(f"    SPF +all pen   : {perm_pen:+3d}     (+all allows ANY sender)")
-    print(f"    DKIM           : {dkim_pts:+3d}/15")
-    print(f"    TLS            : {tls_pts:+3d}/15  ({r['smtp']['tls_version'] or 'none'})")
-    print(f"    MTA-STS        : {mta_pts:+3d}/10")
-    print(f"    DANE/TLSA      : {dane_pts:+3d}/10")
-    if rbl_pen:
-        print(f"    RBL penalty    : {rbl_pen:+3d}     (blocklisted)")
-    if sp_pen:
-        print(f"    sp= mismatch   : {sp_pen:+3d}     (sp=none weakens subdomain protection)")
-    total = dmarc_pts + spf_pts + dkim_pts + tls_pts + mta_pts + dane_pts + spf_pen + void_pen + perm_pen + rbl_pen + sp_pen
-    total = max(0, min(100, total))
-    print(f"    {'─'*30}")
-    print(f"    {BOLD}TOTAL          : {total:3d}/100  Grade {r['grade']}{RESET}")
+    def pts_color(val, maximum):
+        if val <= 0: return RD
+        return GR if val >= maximum else YL
 
+    def score_row(label, val, maximum, note=""):
+        c = pts_color(val, maximum)
+        bar_w = 10
+        filled = round(abs(val) / maximum * bar_w) if maximum else 0
+        bar = f"{c}{'█' * filled}{DM}{'░' * (bar_w - filled)}{R}"
+        sign = "+" if val > 0 else " " if val == 0 else ""
+        note_str = f"  {DM}{note}{R}" if note else ""
+        print(f"      {DM}{label:<14}{R} {bar} {c}{B}{sign}{val}{R}{DM}/{maximum}{R}{note_str}")
+
+    def penalty_row(label, val, note=""):
+        if val == 0:
+            return
+        print(f"      {DM}{label:<14}{R} {'':>10} {RD}{B}{val}{R}    {DM}{note}{R}")
+
+    score_row("DMARC", dmarc_pts, 30, f"p={r['dmarc']['dmarc_policy']}")
+    score_row("SPF", spf_pts, 20, r["spf"]["spf_mechanism"])
+    score_row("DKIM", dkim_pts, 15)
+    score_row("TLS", tls_pts, 15, r["smtp"]["tls_version"] or "none")
+    score_row("MTA-STS", mta_pts, 10)
+    score_row("DANE/TLSA", dane_pts, 10)
+    penalty_row("SPF lookups", spf_pen, ">10 lookups")
+    penalty_row("SPF void", void_pen, ">2 void lookups")
+    penalty_row("SPF +all", perm_pen, "allows any sender")
+    penalty_row("RBL", rbl_pen, "blocklisted")
+    penalty_row("sp= mismatch", sp_pen, "subdomain policy gap")
+    print(f"      {CY}{'─' * 44}{R}")
+    total = max(0, min(100, dmarc_pts + spf_pts + dkim_pts + tls_pts + mta_pts + dane_pts + spf_pen + void_pen + perm_pen + rbl_pen + sp_pen))
+    print(f"      {B}{'TOTAL':<14}{R} {score_bar(total)}  {gc}{B}{total}/100  {grade}{R}")
+
+    # Verdict banner
+    print()
     if r["spoofable"]:
-        print(f"\n  \033[41m\033[97m  ⚠  SPOOFABLE — This domain can be impersonated via email  \033[0m")
+        line = "  ⚠  SPOOFABLE — This domain can be impersonated via email  "
+        print(f"   {BG_RD}{WH}{B}{line}{R}")
     else:
-        print(f"\n  \033[42m\033[97m  ✓  PROTECTED — DMARC enforcement blocks email spoofing  \033[0m")
+        line = "  ✓  PROTECTED — DMARC enforcement blocks email spoofing    "
+        print(f"   {BG_GR}{WH}{B}{line}{R}")
 
+    # Remediation
     if r.get("remediation"):
-        print(f"\n  {BOLD}Remediation{RESET}")
+        print(f"\n   {CY}┌{'─'*52}┐{R}")
+        print(f"   {CY}│{R} 🔧  {B}{WH}Remediation{R}")
+        print(f"   {CY}└{'─'*52}┘{R}")
+        prio_style = {"CRITICAL": (RD, "◆"), "HIGH": (YL, "▲"), "MEDIUM": (CY, "●"), "LOW": (DM, "○")}
         for fix in r["remediation"]:
-            color = "\033[91m" if fix["priority"] == "CRITICAL" else "\033[93m" if fix["priority"] == "HIGH" else "\033[96m"
-            print(f"    {color}[{fix['priority']}]{RESET} {fix['issue']}")
-            print(f"             {DIM}{fix['fix']}{RESET}")
+            pc, icon = prio_style.get(fix["priority"], (DM, "○"))
+            print(f"      {pc}{B}{icon} [{fix['priority']}]{R} {fix['issue']}")
+            print(f"      {DM}  → {fix['fix']}{R}")
             if fix["record"]:
-                print(f"             Record: {BOLD}{fix['record']}{RESET}")
+                print(f"      {GR}  $ {B}{fix['record']}{R}")
+            print()
+    else:
+        print()
     print()
 
 
@@ -912,13 +1034,17 @@ def main():
     domains = list(dict.fromkeys(domains))
 
     if not args.json:
-        print(f"\n  SpoofScore v{__version__}")
-        print(f"  Scanning {len(domains)} domain{'s' if len(domains)>1 else ''}...\n")
+        print(BANNER)
+        n = len(domains)
+        print(f"   {DM}Scanning {B}{WH}{n}{R}{DM} domain{'s' if n > 1 else ''}...{R}\n")
 
     results = []
     for i, domain in enumerate(domains):
         if not args.json:
-            print(f"  [{i+1}/{len(domains)}] {domain}...", flush=True)
+            pct = (i / len(domains)) * 100
+            filled = round(pct / 100 * 20)
+            bar = f"{CY}{'█' * filled}{'░' * (20 - filled)}{R}"
+            print(f"   {bar} {DM}[{i+1}/{len(domains)}]{R} {B}{domain}{R}", flush=True)
         r = scan_domain(domain)
         results.append(r)
         if not args.json:
@@ -949,12 +1075,21 @@ def main():
     if not args.json and len(results) > 1:
         scores = [r["score"] for r in results]
         avg = sum(scores) / len(scores)
-        spoofable = sum(1 for r in results if r["spoofable"])
-        print(f"\n{'='*60}")
-        print(f"  SUMMARY: {len(results)} domains scanned")
-        print(f"  Average score: {avg:.1f}/100")
-        print(f"  Spoofable: {spoofable}/{len(results)} ({spoofable/len(results)*100:.0f}%)")
-        print(f"{'='*60}\n")
+        spoofable_n = sum(1 for r in results if r["spoofable"])
+        protected_n = len(results) - spoofable_n
+        spoof_pct = spoofable_n / len(results) * 100
+        avg_color = GR if avg >= 80 else CY if avg >= 60 else YL if avg >= 40 else RD
+        avg_grade = "A" if avg >= 80 else "B" if avg >= 60 else "C" if avg >= 40 else "D" if avg >= 20 else "F"
+
+        print(f"\n   {CY}╔{'═'*52}╗{R}")
+        print(f"   {CY}║{R}  {B}{WH}SCAN COMPLETE{R}{'':>38}{CY}║{R}")
+        print(f"   {CY}╠{'═'*52}╣{R}")
+        print(f"   {CY}║{R}  Domains scanned    {B}{WH}{len(results)}{R}{'':>{30-len(str(len(results)))}}{CY}║{R}")
+        print(f"   {CY}║{R}  Average score      {score_bar(avg)}  {avg_color}{B}{avg:.0f}/100 {avg_grade}{R}  {CY}║{R}")
+        print(f"   {CY}║{R}  {GR}Protected{R}           {B}{protected_n}{R}{'':>{30-len(str(protected_n))}}{CY}║{R}")
+        print(f"   {CY}║{R}  {RD}Spoofable{R}           {B}{spoofable_n}{R} ({spoof_pct:.0f}%){'':>{25-len(str(spoofable_n))-len(f'{spoof_pct:.0f}')}}{CY}║{R}")
+        print(f"   {CY}╚{'═'*52}╝{R}")
+        print()
 
 
 if __name__ == "__main__":

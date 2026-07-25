@@ -42,56 +42,87 @@ One command. Eight layers of analysis. A clear verdict: **SPOOFABLE** or **PROTE
 ## Demo
 
 ```
-$ python spoofscore.py whitehouse.gov
+$ python spoofscore.py google.com
 
-  SpoofScore v2.0.0
-  Scanning 1 domain...
+   ┌─────────────────────────────────────────────────────┐
+   │                                                     │
+   │   ███████ ██████   ██████   ██████  ███████          │
+   │   ██╔════╝██╔══██╗██╔═══██╗██╔═══██╗██╔════╝        │
+   │   ███████╗██████╔╝██║   ██║██║   ██║█████╗           │
+   │   ╚════██║██╔═══╝ ██║   ██║██║   ██║██╔══╝           │
+   │   ███████║██║     ╚██████╔╝╚██████╔╝██║              │
+   │   ╚══════╝╚═╝      ╚═════╝  ╚═════╝ ╚═╝             │
+   │                                                     │
+   │   SpoofScore v2.0.0                                 │
+   │   Can someone impersonate your domain via email?    │
+   │   github.com/harrizuan/spoofscore                   │
+   │                                                     │
+   └─────────────────────────────────────────────────────┘
 
-  [1/1] whitehouse.gov...
+   Scanning 1 domain...
 
-  ============================================================
-  whitehouse.gov
-  Score: 85/100  Grade A
-  ============================================================
+   ░░░░░░░░░░░░░░░░░░░░ [1/1] google.com
 
-  Layer 1: DNS Authentication
-    MX Record     : ✓  (mail.whitehouse.gov)
-    SPF            : hardfail  (v=spf1 ... -all)
-    DMARC Policy   : reject
-    DKIM           : ✓  (selectors: selector1, selector2)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   google.com
 
-  Layer 2: SMTP/TLS
-    STARTTLS       : Yes
-    TLS Version    : TLSv1.2
-    Cipher Suite   : AES256-GCM-SHA384
+      Score    ██████████████░░░░░░  70/100
+      Grade    ▌▌▌ B ▐▐▐
+      Verdict  ✓ PROTECTED
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Layer 3: Mail Platform
-    Platform       : Microsoft 365
+   ┌────────────────────────────────────────────────────┐
+   │ 🔐  Layer 1 — DNS Authentication                  │
+   └────────────────────────────────────────────────────┘
+      MX Record        ✓  smtp.google.com
+      SPF              ~all (softfail)
+                       v=spf1 include:_spf.google.com ~all
+      DMARC            reject
+      Reporting        mailto:mailauth-reports@google.com
+      DKIM             ✓  selectors: 20230601, 20221208
 
-  Layer 4: SPF Chain
-    DNS Lookups    : 7/10  Exceeds limit: No
-    Void Lookups   : 0/2   Exceeds limit: No
-    Chain Depth    : 3
+   ┌────────────────────────────────────────────────────┐
+   │ 🔒  Layer 2 — SMTP/TLS Probing                    │
+   └────────────────────────────────────────────────────┘
+      STARTTLS         Yes
+      TLS Version      TLSv1.3
+      Cipher           TLS_AES_256_GCM_SHA384
 
-  Layer 5: Transport & Reputation
-    MTA-STS        : ✓
-    DANE/TLSA      : ✗
-    BIMI           : ✗
-    TLS-RPT        : ✓
-    FCrDNS         : Verified
-    RBL Blocklist  : Clean (10 zones checked)
+   ┌────────────────────────────────────────────────────┐
+   │ 📧  Layer 3 — Mail Platform                       │
+   └────────────────────────────────────────────────────┘
+      Provider         Google
 
-  Layer 6: Composite Score Breakdown
-    DMARC          : +30/30  (p=reject)
-    SPF            : +20/20  (hardfail)
-    DKIM           : +15/15
-    TLS            : +10/15  (TLSv1.2)
-    MTA-STS        : +10/10
-    DANE/TLSA      :  +0/10
-    ──────────────────────────────
-    TOTAL          :  85/100  Grade A
+   ┌────────────────────────────────────────────────────┐
+   │ 🔗  Layer 4 — SPF Chain Analysis                   │
+   └────────────────────────────────────────────────────┘
+      DNS Lookups      1/10
+      Void Lookups     0/2
+      Chain Depth      1
 
-  ✓  PROTECTED — DMARC enforcement blocks email spoofing
+   ┌────────────────────────────────────────────────────┐
+   │ 🛡️  Layer 5 — Transport & Reputation               │
+   └────────────────────────────────────────────────────┘
+      MTA-STS          ✓  RFC 8461
+      DANE/TLSA        ✗  RFC 7672
+      BIMI             ✗
+      TLS-RPT          ✗
+      FCrDNS           Verified  sd-in-f27.1e100.net
+      RBL Status       Clean  10 zones scanned
+
+   ┌────────────────────────────────────────────────────┐
+   │ 📊  Layer 6 — Score Breakdown                      │
+   └────────────────────────────────────────────────────┘
+      DMARC          ██████████ +30/30  p=reject
+      SPF            ████████░░ +15/20  softfail
+      DKIM           ██████████ +15/15
+      TLS            ░░░░░░░░░░  +0/15  none
+      MTA-STS        ██████████ +10/10
+      DANE/TLSA      ░░░░░░░░░░  +0/10
+      ────────────────────────────────────────────
+      TOTAL          ██████████████░░░░░░  70/100  B
+
+   ✓  PROTECTED — DMARC enforcement blocks email spoofing
 ```
 
 ---
