@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+title: SpoofScore
+message: "If you use this tool, please cite it using the metadata below."
+type: software
+authors:
+  - given-names: Ahmad Al Harrizuan
+    family-names: Izadin
+    alias: bau1u
+    website: https://www.tfsec.org
+repository-code: https://github.com/harrizuan/spoofscore
+url: https://www.tfsec.org
+license: MIT
+version: 2.0.0
+date-released: "2026-07-25"
+keywords:
+  - email-security
+  - dmarc
+  - spf
+  - dkim
+  - spoofing
+  - scanner
+  - red-team
+  - security-tool

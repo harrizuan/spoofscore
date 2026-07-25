@@ -19,12 +19,20 @@
 </p>
 
 <p align="center">
+  <sub>Made by <b><a href="https://www.tfsec.org">bau1u</a></b></sub><br><br>
+  <a href="https://www.tfsec.org"><img src="https://img.shields.io/badge/tfsec.org-000?style=flat-square&logo=firefox&logoColor=white" alt="Website" /></a>
+  <a href="https://www.linkedin.com/in/harrizuan/"><img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
+  <a href="https://hackerone.com/bau1u"><img src="https://img.shields.io/badge/HackerOne-494649?style=flat-square&logo=hackerone&logoColor=white" alt="HackerOne" /></a>
+  <a href="https://x.com/bau1u"><img src="https://img.shields.io/badge/@bau1u-000?style=flat-square&logo=x&logoColor=white" alt="X" /></a>
+  <a href="https://github.com/harrizuan"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub" /></a>
+</p>
+
+<p align="center">
   <a href="#quick-start">Quick Start</a> •
   <a href="#what-it-checks">8 Layers</a> •
   <a href="#scoring-model">Scoring</a> •
   <a href="#how-it-differs">vs Competitors</a> •
-  <a href="#usage">Usage</a> •
-  <a href="#citation">Citation</a>
+  <a href="#usage">Usage</a>
 </p>
 
 ---
@@ -392,39 +400,8 @@ pip install dnspython
 
 ---
 
-## Author
-
-<p>
-  <b>bau1u</b><br>
-  <sub>Security researcher. Red teamer. Tool builder.</sub>
-</p>
-
-<a href="https://www.tfsec.org"><img src="https://img.shields.io/badge/🌐_tfsec.org-000?style=flat-square" alt="Website" /></a>
-<a href="https://www.linkedin.com/in/harrizuan/"><img src="https://img.shields.io/badge/LinkedIn-harrizuan-0A66C2?style=flat-square&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
-<a href="https://hackerone.com/bau1u"><img src="https://img.shields.io/badge/HackerOne-bau1u-494649?style=flat-square&logo=hackerone&logoColor=white" alt="HackerOne" /></a>
-<a href="https://x.com/bau1u"><img src="https://img.shields.io/badge/X-@bau1u-000?style=flat-square&logo=x&logoColor=white" alt="X" /></a>
-<a href="https://github.com/harrizuan"><img src="https://img.shields.io/badge/GitHub-harrizuan-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub" /></a>
-
----
-
-## Citation
-
-If you use SpoofScore in research, please cite:
-
-```bibtex
-@inproceedings{izadin2026spoofable,
-  title     = {99\% Spoofable: Measuring Government Email Authentication
-               Failures across 12 Countries with Live Spoofing Proof},
-  author    = {Izadin, Amirul Azuan Harrizuan},
-  booktitle = {Proceedings of IDSECCONF 2026},
-  year      = {2026}
-}
-```
-
----
-
 <p align="center">
-  <sub>Built by bau1u. One dependency. One question. One answer.</sub><br>
+  <sub>Built by <a href="https://www.tfsec.org">bau1u</a>. One dependency. One question. One answer.</sub><br>
   <b>Can someone impersonate your domain?</b><br>
   <sub>Find out in seconds.</sub>
 </p>
