@@ -369,25 +369,16 @@ python spoofscore.py -f 1000-domains.txt -o scan.csv --smtp-threads 30
 
 ---
 
-## Tested at Scale
-
-We used SpoofScore to scan 900 government domains across 12 countries for an academic study:
-
-- **900 government domains** across **12 countries** (all ASEAN + AU, JP, KR, EE, US, UK)
-- **346 domains (38.4%)** were spoofable (DMARC `p=none` or missing)
-- **Live spoofing proof** sent to Gmail, Yahoo, and Outlook to confirm the results
-- Published at **IDSECCONF 2026**
+## Notes
 
 > [!TIP]
 > Run SpoofScore from a **VPS with port 25 open** for full Layer 2 (SMTP/TLS) results.
 > Most ISPs and cloud providers block outbound port 25 on home connections.
 
----
-
-## Requirements
-
-- Python 3.8+
-- `dnspython` (that's it)
+- Python 3.8+ required. Only one dependency: `dnspython`
+- DKIM probes 80+ selectors. Custom selectors may still be missed
+- RBL checks query 10 major blocklist zones. Some zones may rate limit
+- This is a point in time scan. DNS records and mail server configs change
 
 ```bash
 pip install dnspython
@@ -403,7 +394,16 @@ pip install dnspython
 
 ## Author
 
-**bau1u** / [@harrizuan](https://github.com/harrizuan)
+<p>
+  <b>bau1u</b><br>
+  <sub>Security researcher. Red teamer. Tool builder.</sub>
+</p>
+
+<a href="https://www.tfsec.org"><img src="https://img.shields.io/badge/🌐_tfsec.org-000?style=flat-square" alt="Website" /></a>
+<a href="https://www.linkedin.com/in/harrizuan/"><img src="https://img.shields.io/badge/LinkedIn-harrizuan-0A66C2?style=flat-square&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
+<a href="https://hackerone.com/bau1u"><img src="https://img.shields.io/badge/HackerOne-bau1u-494649?style=flat-square&logo=hackerone&logoColor=white" alt="HackerOne" /></a>
+<a href="https://x.com/bau1u"><img src="https://img.shields.io/badge/X-@bau1u-000?style=flat-square&logo=x&logoColor=white" alt="X" /></a>
+<a href="https://github.com/harrizuan"><img src="https://img.shields.io/badge/GitHub-harrizuan-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub" /></a>
 
 ---
 
@@ -424,7 +424,7 @@ If you use SpoofScore in research, please cite:
 ---
 
 <p align="center">
-  <sub>Built with focus. One dependency. One question. One verdict.</sub><br>
+  <sub>Built by bau1u. One dependency. One question. One answer.</sub><br>
   <b>Can someone impersonate your domain?</b><br>
   <sub>Find out in seconds.</sub>
 </p>
