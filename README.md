@@ -6,7 +6,7 @@
 
 <p align="center">
   <b>Can someone impersonate your domain via email?</b><br>
-  <sub>8-layer email security scanner with composite scoring, spoofability verdict, and copy-paste remediation.</sub>
+  <sub>8 layer email security scanner with scoring, spoofability verdict, and copy paste remediation.</sub>
 </p>
 
 <p align="center">
@@ -31,11 +31,11 @@
 
 Most email security tools ask: *"Is your DNS configured correctly?"*
 
-**SpoofScore asks a different question:**
+SpoofScore asks a different question:
 
-> **"Can an attacker send email as you — right now?"**
+> **"Can an attacker send email as you, right now?"**
 
-One command. Eight layers of analysis. A clear verdict: **SPOOFABLE** or **PROTECTED**.
+One command. Eight layers. A clear answer: **SPOOFABLE** or **PROTECTED**.
 
 ---
 
@@ -44,27 +44,25 @@ One command. Eight layers of analysis. A clear verdict: **SPOOFABLE** or **PROTE
 ```
 $ python spoofscore.py google.com
 
-   ┌─────────────────────────────────────────────────────┐
-   │                                                     │
-   │   ███████ ██████   ██████   ██████  ███████          │
-   │   ██╔════╝██╔══██╗██╔═══██╗██╔═══██╗██╔════╝        │
-   │   ███████╗██████╔╝██║   ██║██║   ██║█████╗           │
-   │   ╚════██║██╔═══╝ ██║   ██║██║   ██║██╔══╝           │
-   │   ███████║██║     ╚██████╔╝╚██████╔╝██║              │
-   │   ╚══════╝╚═╝      ╚═════╝  ╚═════╝ ╚═╝             │
-   │                                                     │
-   │   SpoofScore v2.0.0                                 │
-   │   Can someone impersonate your domain via email?    │
-   │   github.com/harrizuan/spoofscore                   │
-   │                                                     │
-   └─────────────────────────────────────────────────────┘
+  .-')     _ (`-.                                            ,-.      .-. .-')     ('-.
+ ( OO ).  ( (OO  )                                           | |      \  ( OO )   ( OO ).-.
+(_)---\_)_.`     \ .-'),-----.  .-'),-----.    ,------.      | |       ;-----.\   / . --. / ,--. ,--.   .---. ,--. ,--.
+/    _ |(__...--''( OO'  .-.  '( OO'  .-.  '('-| _.---'      | |       | .-.  |   | \-.  \  |  | |  |  /_   | |  | |  |
+\  :` `. |  /  | |/   |  | |  |/   |  | |  |(OO|(_\          | |       | '-' /_).-'-'  |  | |  | | .-') |   | |  | | .-')
+ '..`''.)|  |_.' |\_) |  |\|  |\_) |  |\|  |/  |  '--.       | |       | .-. `.  \| |_.'  | |  |_|( OO )|   | |  |_|( OO )
+.-._)   \|  .___.'  \ |  | |  |  \ |  | |  |\_)|  .--'       | |       | |  \  |  |  .-.  | |  | | `-' /|   | |  | | `-' /
+\       /|  |        `'  '-'  '   `'  '-'  '  \|  |_)        | |       | '--'  /  |  | |  |('  '-'(_.-' |   |('  '-'(_.-'
+ `-----' `--'          `-----'      `-----'    `--'          `-'       `------'   `--' `--'  `-----'    `---'  `-----'
+                                                                    github.com/harrizuan/spoofscore
+   SpoofScore v2.0.0    Can someone impersonate your domain via email?
 
    Scanning 1 domain...
 
-   ░░░░░░░░░░░░░░░░░░░░ [1/1] google.com
+   [1/1] google.com
+   ████████████████ 📡  Reputation
 
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   google.com
+   google.com  (12.4s)
 
       Score    ██████████████░░░░░░  70/100
       Grade    ▌▌▌ B ▐▐▐
@@ -123,6 +121,8 @@ $ python spoofscore.py google.com
       TOTAL          ██████████████░░░░░░  70/100  B
 
    ✓  PROTECTED — DMARC enforcement blocks email spoofing
+
+   Completed in 12.4s
 ```
 
 ---
@@ -146,10 +146,10 @@ That's it. One dependency. No config files. No API keys.
 | 2 | **SMTP/TLS Probing** | STARTTLS, TLS version, cipher | Live connection to mail server on port 25 |
 | 3 | **Mail Platform** | Email service provider | Fingerprint from MX hostname (Google, M365, SES, Zoho, ProtonMail, Mimecast) |
 | 4 | **SPF Chain Analysis** | Include tree walking | RFC 7208 10-lookup limit, void lookup limit, dangling include detection |
-| 5 | **Transport Security** | MTA-STS, DANE/TLSA, BIMI, TLS-RPT | Full transport layer coverage per RFC 8461 and RFC 7672 |
+| 5 | **Transport Security** | MTA-STS, DANE/TLSA, BIMI, TLS-RPT | Checks all transport protocols (RFC 8461, RFC 7672) |
 | 6 | **Reputation** | RBL/DNSBL scan | 10 major blocklist zones (Spamhaus, SpamCop, Barracuda, SORBS, UCEPROTECT) |
 | 7 | **Infrastructure** | FCrDNS, DMARC sp= | Forward-confirmed reverse DNS + subdomain policy mismatch |
-| 8 | **Composite Score** | Weighted 0-100 | Spoofability verdict + prioritized remediation with exact DNS records |
+| 8 | **Composite Score** | Weighted 0-100 | Spoofability verdict + remediation with exact DNS records to copy paste |
 
 ---
 
@@ -207,9 +207,9 @@ That's it. One dependency. No config files. No API keys.
 
 > [!IMPORTANT]
 > SpoofScore is not just another DMARC checker. Most tools validate DNS records.
-> SpoofScore tells you if those records actually **prevent spoofing** — and what to fix if they don't.
+> SpoofScore tells you if those records actually **prevent spoofing**, and what to fix if they don't.
 
-### Feature-by-feature vs the competition
+### Feature by feature vs the competition
 
 | Capability | SpoofScore | Spoofy | espoofer | checkdmarc | mailvalidator | dnsarmor |
 |:-----------|:----------:|:------:|:--------:|:----------:|:-------------:|:--------:|
@@ -234,7 +234,7 @@ That's it. One dependency. No config files. No API keys.
 > [!NOTE]
 > **Where others beat us (for now):**
 > `mailvalidator` checks 104 RBL zones (we check 10), and `dnsarmor` does DNSSEC chain validation.
-> We focus on the question that matters most for red teams and defenders: **can this domain be spoofed?**
+> We focus on the question that matters most to red teams and defenders: **can this domain be spoofed?**
 
 ---
 
@@ -281,12 +281,12 @@ python spoofscore.py -f 1000-domains.txt -o scan.csv --smtp-threads 30
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `domains` | One or more domains to scan | — |
-| `-f`, `--file` | File with one domain per line | — |
-| `-o`, `--output` | Output CSV file path | — |
+| `domains` | One or more domains to scan | |
+| `-f`, `--file` | File with one domain per line | |
+| `-o`, `--output` | Output CSV file path | |
 | `--json` | Output JSON instead of CLI report | `false` |
 | `--smtp-threads` | SMTP probing threads for batch mode | `10` |
-| `--version` | Print version and exit | — |
+| `--version` | Print version and exit | |
 
 </details>
 
@@ -369,18 +369,18 @@ python spoofscore.py -f 1000-domains.txt -o scan.csv --smtp-threads 30
 
 ---
 
-## Proven at Scale
+## Tested at Scale
 
-SpoofScore was built for and validated by a large-scale academic study:
+We used SpoofScore to scan 900 government domains across 12 countries for an academic study:
 
-- **900 government domains** scanned across **12 countries** (all ASEAN + AU, JP, KR, EE, US, UK)
-- **346 domains (38.4%)** found spoofable (DMARC `p=none` or missing)
-- **Live spoofing proof** sent to Gmail, Yahoo, and Outlook to validate findings
-- Results published at **IDSECCONF 2026**
+- **900 government domains** across **12 countries** (all ASEAN + AU, JP, KR, EE, US, UK)
+- **346 domains (38.4%)** were spoofable (DMARC `p=none` or missing)
+- **Live spoofing proof** sent to Gmail, Yahoo, and Outlook to confirm the results
+- Published at **IDSECCONF 2026**
 
 > [!TIP]
 > Run SpoofScore from a **VPS with port 25 open** for full Layer 2 (SMTP/TLS) results.
-> Most ISPs and cloud providers block outbound port 25 on consumer connections.
+> Most ISPs and cloud providers block outbound port 25 on home connections.
 
 ---
 
@@ -397,13 +397,13 @@ pip install dnspython
 
 ## License
 
-[MIT](LICENSE) — use it, fork it, build on it.
+[MIT](LICENSE). Use it, fork it, build on it.
 
 ---
 
 ## Author
 
-**bau1u** — [@harrizuan](https://github.com/harrizuan)
+**bau1u** / [@harrizuan](https://github.com/harrizuan)
 
 ---
 

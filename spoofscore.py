@@ -550,30 +550,40 @@ def compute_score(result):
 # Full Domain Scan
 # ═══════════════════════════════════════════════════════════════
 
-def scan_domain(domain):
+def scan_domain(domain, json_mode=False):
     domain = domain.strip().lower().rstrip(".")
     result = {"domain": domain}
+    t0 = time.time()
 
+    show_progress(domain, 0, json_mode=json_mode)
     result["mx"] = check_mx(domain)
     result["spf"] = check_spf(domain)
     result["dmarc"] = check_dmarc(domain)
 
+    show_progress(domain, 1, json_mode=json_mode)
     mx_host = result["mx"]["mx_primary"]
     result["platform"] = fingerprint_platform(mx_host, domain)
 
+    show_progress(domain, 2, json_mode=json_mode)
     result["dkim"] = check_dkim(domain, result["platform"])
 
+    show_progress(domain, 3, json_mode=json_mode)
     result["smtp"] = probe_smtp(mx_host)
 
+    show_progress(domain, 4, json_mode=json_mode)
     result["spf_chain"] = analyze_spf_chain(domain)
 
+    show_progress(domain, 5, json_mode=json_mode)
     result["mta_sts"] = check_mta_sts(domain)
     result["dane"] = check_dane(mx_host)
     result["bimi"] = check_bimi(domain)
     result["tls_rpt"] = check_tls_rpt(domain)
+
+    show_progress(domain, 6, json_mode=json_mode)
     result["rbl"] = check_rbl(mx_host)
     result["fcrdns"] = check_fcrdns(mx_host)
 
+    show_progress(domain, 7, json_mode=json_mode)
     dmarc_sp = result["dmarc"].get("dmarc_sp", "")
     dmarc_p = result["dmarc"]["dmarc_policy"]
     result["sp_mismatch"] = (
@@ -588,6 +598,10 @@ def scan_domain(domain):
     result["spoofable"] = spoofable
 
     result["remediation"] = generate_remediation(result)
+    result["scan_time"] = time.time() - t0
+
+    if not json_mode:
+        clear_progress()
 
     return result
 
@@ -732,21 +746,48 @@ GRADE_STYLE = {
 }
 
 BANNER = f"""
-{CY}   ┌─────────────────────────────────────────────────────┐{R}
-{CY}   │{R}                                                     {CY}│{R}
-{CY}   │{R}   {B}{WH}███████{R} {B}{WH}██████{R}   {B}{WH}██████{R}   {B}{WH}██████{R}  {B}{WH}███████{R}          {CY}│{R}
-{CY}   │{R}   {CY}██{DM}╔════╝{R}{CY}██{DM}╔══{R}{CY}██{DM}╗{R}{CY}██{DM}╔═══{R}{CY}██{DM}╗{R}{CY}██{DM}╔═══{R}{CY}██{DM}╗{R}{CY}██{DM}╔════╝{R}          {CY}│{R}
-{CY}   │{R}   {B}{CY}███████{DM}╗{R}{B}{CY}██████{DM}╔╝{R}{B}{CY}██{DM}║{R}   {B}{CY}██{DM}║{R}{B}{CY}██{DM}║{R}   {B}{CY}██{DM}║{R}{B}{CY}█████{DM}╗{R}            {CY}│{R}
-{CY}   │{R}   {DM}╚════{R}{CY}██{DM}║{R}{CY}██{DM}╔═══╝{R} {CY}██{DM}║{R}   {CY}██{DM}║{R}{CY}██{DM}║{R}   {CY}██{DM}║{R}{CY}██{DM}╔══╝{R}            {CY}│{R}
-{CY}   │{R}   {B}{CY}███████{DM}║{R}{B}{CY}██{DM}║{R}     {DM}╚{R}{B}{CY}██████{DM}╔╝{R}{DM}╚{R}{B}{CY}██████{DM}╔╝{R}{B}{CY}██{DM}║{R}              {CY}│{R}
-{CY}   │{R}   {DM}╚══════╝╚═╝      ╚═════╝  ╚═════╝ ╚═╝{R}              {CY}│{R}
-{CY}   │{R}                                                     {CY}│{R}
-{CY}   │{R}   {B}SpoofScore{R} {DM}v{__version__}{R}                                  {CY}│{R}
-{CY}   │{R}   {DM}Can someone impersonate your domain via email?{R}     {CY}│{R}
-{CY}   │{R}   {DM}github.com/harrizuan/spoofscore{R}                    {CY}│{R}
-{CY}   │{R}                                                     {CY}│{R}
-{CY}   └─────────────────────────────────────────────────────┘{R}
+{CY}  .-')     _ (`-.                                            {DM},{CY}-.      .-. .-')     ('-.{R}
+{CY} ( OO ).  ( (OO  )                                           {DM}|{CY} |      \\  ( OO )   ( OO ).-.{R}
+{CY}(_)---\\_)_.`     \\ .-'),-----.  .-'),-----.    ,------.      {DM}|{CY} |       ;-----.\\   / . --. / ,--. ,--.   .---. ,--. ,--.{R}
+{CY}/    _ |(__...--''( OO'  .-.  '( OO'  .-.  '('-| _.---'      {DM}|{CY} |       | .-.  |   | \\-.  \\  |  | |  |  /_   | |  | |  |{R}
+{CY}\\  :` `. |  /  | |/   |  | |  |/   |  | |  |(OO|(_\\          {DM}|{CY} |       | '-' /_).-'-'  |  | |  | | .-') |   | |  | | .-.'){R}
+{CY} '..`''.)|  |_.' |\\_) |  |\\|  |\\_) |  |\\|  |/  |  '--.       {DM}|{CY} |       | .-. `.  \\| |_.'  | |  |_|( OO )|   | |  |_|( OO ){R}
+{CY}.-._)   \\|  .___.'  \\ |  | |  |  \\ |  | |  |\\_)|  .--'       {DM}|{CY} |       | |  \\  |  |  .-.  | |  | | `-' /|   | |  | | `-' /{R}
+{CY}\\       /|  |        `'  '-'  '   `'  '-'  '  \\|  |_)        {DM}|{CY} |       | '--'  /  |  | |  |('  '-'(_.-' |   |('  '-'(_.-'{R}
+{CY} `-----' `--'          `-----'      `-----'    `--'          {DM}`-'{CY}       `------'   `--' `--'  `-----'    `---'  `-----'{R}
+{DM}                                                                    github.com/harrizuan/spoofscore{R}
+{B}   SpoofScore{R} {DM}v{__version__}{R}    {DM}Can someone impersonate your domain via email?{R}
 """
+
+LAYER_NAMES = [
+    ("🔐", "DNS Auth"),
+    ("📧", "Platform"),
+    ("🔑", "DKIM"),
+    ("🔒", "SMTP/TLS"),
+    ("🔗", "SPF Chain"),
+    ("🛡️ ", "Transport"),
+    ("📡", "Reputation"),
+    ("⚙️ ", "Scoring"),
+]
+
+def show_progress(domain, step, total_steps=8, json_mode=False):
+    if json_mode:
+        return
+    icon, name = LAYER_NAMES[step] if step < len(LAYER_NAMES) else ("⚙️ ", "Scoring")
+    filled = round((step + 1) / total_steps * 16)
+    bar = f"{CY}{'█' * filled}{'░' * (16 - filled)}{R}"
+    print(f"\r   {bar} {icon}  {DM}{name:<12}{R}", end="", flush=True)
+
+def clear_progress():
+    print(f"\r{'':>60}\r", end="", flush=True)
+
+def fmt_time(seconds):
+    if seconds < 1:
+        return f"{seconds*1000:.0f}ms"
+    if seconds < 60:
+        return f"{seconds:.1f}s"
+    m, s = divmod(seconds, 60)
+    return f"{int(m)}m{s:.0f}s"
 
 def score_bar(score, width=20):
     filled = round(score / 100 * width)
@@ -787,15 +828,16 @@ def row(label, value, extra=""):
     extra_str = f"  {DM}{extra}{R}" if extra else ""
     print(f"      {DM}{label_padded}{R} {value}{extra_str}")
 
-def print_report(r):
+def print_report(r, elapsed=0):
     ch = r["spf_chain"]
     w = SCORE_WEIGHTS
     score = r["score"]
     grade = r["grade"]
     gc, _ = GRADE_STYLE.get(grade, (CY, ""))
 
+    time_str = f" {DM}({fmt_time(elapsed)}){R}" if elapsed else ""
     print(f"\n   {CY}{'━' * 54}{R}")
-    print(f"   {B}{WH}{r['domain']}{R}")
+    print(f"   {B}{WH}{r['domain']}{R}{time_str}")
     print()
     print(f"      Score    {score_bar(score)}  {gc}{B}{score}/100{R}")
     print(f"      Grade    {gc}{B}{'▌' * 3} {grade} {'▐' * 3}{R}")
@@ -1038,17 +1080,16 @@ def main():
         n = len(domains)
         print(f"   {DM}Scanning {B}{WH}{n}{R}{DM} domain{'s' if n > 1 else ''}...{R}\n")
 
+    total_start = time.time()
     results = []
     for i, domain in enumerate(domains):
         if not args.json:
-            pct = (i / len(domains)) * 100
-            filled = round(pct / 100 * 20)
-            bar = f"{CY}{'█' * filled}{'░' * (20 - filled)}{R}"
-            print(f"   {bar} {DM}[{i+1}/{len(domains)}]{R} {B}{domain}{R}", flush=True)
-        r = scan_domain(domain)
+            print(f"   {DM}[{i+1}/{len(domains)}]{R} {B}{domain}{R}", flush=True)
+        r = scan_domain(domain, json_mode=args.json)
         results.append(r)
         if not args.json:
-            print_report(r)
+            elapsed = r.get("scan_time", 0)
+            print_report(r, elapsed)
 
     if args.json:
         out = []
@@ -1072,6 +1113,8 @@ def main():
         if not args.json:
             print(f"  Results saved to {args.output}")
 
+    total_elapsed = time.time() - total_start
+
     if not args.json and len(results) > 1:
         scores = [r["score"] for r in results]
         avg = sum(scores) / len(scores)
@@ -1080,16 +1123,27 @@ def main():
         spoof_pct = spoofable_n / len(results) * 100
         avg_color = GR if avg >= 80 else CY if avg >= 60 else YL if avg >= 40 else RD
         avg_grade = "A" if avg >= 80 else "B" if avg >= 60 else "C" if avg >= 40 else "D" if avg >= 20 else "F"
+        grade_counts = {}
+        for rr in results:
+            grade_counts[rr["grade"]] = grade_counts.get(rr["grade"], 0) + 1
 
-        print(f"\n   {CY}╔{'═'*52}╗{R}")
-        print(f"   {CY}║{R}  {B}{WH}SCAN COMPLETE{R}{'':>38}{CY}║{R}")
-        print(f"   {CY}╠{'═'*52}╣{R}")
-        print(f"   {CY}║{R}  Domains scanned    {B}{WH}{len(results)}{R}{'':>{30-len(str(len(results)))}}{CY}║{R}")
-        print(f"   {CY}║{R}  Average score      {score_bar(avg)}  {avg_color}{B}{avg:.0f}/100 {avg_grade}{R}  {CY}║{R}")
-        print(f"   {CY}║{R}  {GR}Protected{R}           {B}{protected_n}{R}{'':>{30-len(str(protected_n))}}{CY}║{R}")
-        print(f"   {CY}║{R}  {RD}Spoofable{R}           {B}{spoofable_n}{R} ({spoof_pct:.0f}%){'':>{25-len(str(spoofable_n))-len(f'{spoof_pct:.0f}')}}{CY}║{R}")
-        print(f"   {CY}╚{'═'*52}╝{R}")
+        print(f"\n   {CY}╔{'═'*54}╗{R}")
+        print(f"   {CY}║{R}  {B}{WH}SCAN COMPLETE{R}    {DM}{fmt_time(total_elapsed)}{R}{'':>30}{CY}║{R}")
+        print(f"   {CY}╠{'═'*54}╣{R}")
+        print(f"   {CY}║{R}                                                      {CY}║{R}")
+        print(f"   {CY}║{R}  {DM}Domains{R}       {B}{WH}{len(results)}{R}                                    {CY}║{R}")
+        print(f"   {CY}║{R}  {DM}Avg Score{R}     {score_bar(avg)}  {avg_color}{B}{avg:.0f}/100 {avg_grade}{R}    {CY}║{R}")
+        print(f"   {CY}║{R}                                                      {CY}║{R}")
+        print(f"   {CY}║{R}  {GR}● Protected{R}   {B}{protected_n}{R}                                    {CY}║{R}")
+        print(f"   {CY}║{R}  {RD}● Spoofable{R}   {B}{spoofable_n}{R} ({spoof_pct:.0f}%)                             {CY}║{R}")
+        print(f"   {CY}║{R}                                                      {CY}║{R}")
+        grade_line = "  ".join(f"{GRADE_STYLE.get(g,(CY,''))[0]}{B}{g}{R}:{grade_counts.get(g,0)}" for g in "ABCDF")
+        print(f"   {CY}║{R}  {DM}Grades{R}        {grade_line}{'':>10}{CY}║{R}")
+        print(f"   {CY}║{R}                                                      {CY}║{R}")
+        print(f"   {CY}╚{'═'*54}╝{R}")
         print()
+    elif not args.json:
+        print(f"   {DM}Completed in {fmt_time(total_elapsed)}{R}\n")
 
 
 if __name__ == "__main__":
