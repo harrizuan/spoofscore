@@ -1411,17 +1411,27 @@ GRADE_STYLE = {
 }
 
 BANNER = f"""
-{CY}  .-')     _ (`-.                                        .-')                           _  .-')     ('-.{R}
-{CY} ( OO ).  ( (OO  )                                      ( OO ).                        ( \\( -O )  _(  OO){R}
-{CY}(_)---\\_)_.`     \\ .-'),-----.  .-'),-----.    ,------.(_)---\\_)   .-----.  .-'),-----. ,------. (,------.{R}
-{CY}/    _ |(__...--''( OO'  .-.  '( OO'  .-.  '('-| _.---'/    _ |   '  .--./ ( OO'  .-.  '|   /`. ' |  .---'{R}
-{CY}\\  :` `. |  /  | |/   |  | |  |/   |  | |  |(OO|(_\\    \\  :` `.   |  |('-. /   |  | |  ||  /  | | |  |{R}
-{CY} '..`''.)|  |_.' |\\_) |  |\\|  |\\_) |  |\\|  |/  |  '--.  '..`''.) /_) |OO  )\\_) |  |\\|  ||  |_.' |(|  '--.{R}
-{CY}.-._)   \\|  .___.'  \\ |  | |  |  \\ |  | |  |\\_)|  .--' .-._)   \\ ||  |`-'|   \\ |  | |  ||  .  '.' |  .--'{R}
-{CY}\\       /|  |        `'  '-'  '   `'  '-'  '  \\|  |_)  \\       /(_'  '--'\\    `'  '-'  '|  |\\  \\  |  `---.{R}
-{CY} `-----' `--'          `-----'      `-----'    `--'     `-----'    `-----'      `-----' `--' '--' `------'{R}
+{CY}  .-')     _ (`-.                                       {R}
+{CY} ( OO ).  ( (OO  )                                      {R}
+{CY}(_)---\\_)_.`     \\ .-'),-----.  .-'),-----.    ,------. {R}
+{CY}/    _ |(__...--''( OO'  .-.  '( OO'  .-.  '('-| _.---' {R}
+{CY}\\  :` `. |  /  | |/   |  | |  |/   |  | |  |(OO|(_\\     {R}
+{CY} '..`''.)|  |_.' |\\_) |  |\\|  |\\_) |  |\\|  |/  |  '--.  {R}
+{CY}.-._)   \\|  .___.'  \\ |  | |  |  \\ |  | |  |\\_)|  .--'  {R}
+{CY}\\       /|  |        `'  '-'  '   `'  '-'  '  \\|  |_)   {R}
+{CY} `-----' `--'          `-----'      `-----'    `--'     {R}
+{CY}  .-')                           _  .-')     ('-.       {R}
+{CY} ( OO ).                        ( \\( -O )  _(  OO)      {R}
+{CY}(_)---\\_)   .-----.  .-'),-----. ,------. (,------.     {R}
+{CY}/    _ |   '  .--./ ( OO'  .-.  '|   /`. ' |  .---'     {R}
+{CY}\\  :` `.   |  |('-. /   |  | |  ||  /  | | |  |         {R}
+{CY} '..`''.) /_) |OO  )\\_) |  |\\|  ||  |_.' |(|  '--.      {R}
+{CY}.-._)   \\ ||  |`-'|   \\ |  | |  ||  .  '.' |  .--'      {R}
+{CY}\\       /(_'  '--'\\    `'  '-'  '|  |\\  \\  |  `---.     {R}
+{CY} `-----'    `-----'      `-----' `--' '--' `------'     {R}
 
-{B}   SpoofScore{R} {DM}v{__version__}{R}    {DM}Can someone impersonate your domain via email?{R}
+{B}   SpoofScore{R} {DM}v{__version__}{R}
+{DM}   Can someone impersonate your domain via email?{R}
 {DM}   made by {B}bau1u{R} {DM}— github.com/harrizuan/spoofscore{R}
 """
 
@@ -1444,12 +1454,14 @@ def show_progress(domain, step, total_steps=9, json_mode=False):
     if json_mode:
         return
     icon, name = LAYER_NAMES[step] if step < len(LAYER_NAMES) else ("⚙️ ", "Scoring")
-    filled = round((step + 1) / total_steps * 16)
-    bar = f"{CY}{'█' * filled}{'░' * (16 - filled)}{R}"
-    print(f"\r   {bar} {icon}  {DM}{name:<12}{R}", end="", flush=True)
+    pct = round((step + 1) / total_steps * 100)
+    filled = round((step + 1) / total_steps * 20)
+    bar = f"{CY}{'█' * filled}{'░' * (20 - filled)}{R}"
+    line = f"   {bar} {icon}  {DM}{name:<12}{R} {DM}{pct:>3}%{R}"
+    print(f"\033[2K\r{line}", end="", flush=True)
 
 def clear_progress():
-    print(f"\r{'':>60}\r", end="", flush=True)
+    print(f"\033[2K\r", end="", flush=True)
 
 def fmt_time(seconds):
     if seconds < 1:
