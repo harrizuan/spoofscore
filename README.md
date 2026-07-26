@@ -68,19 +68,18 @@ $ python spoofscore.py google.com
    Scanning 1 domain...
 
    [1/1] google.com
-   ████████████████ 📡  Reputation
+   ████████████████████ 🔀  Routing
 
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    google.com  (12.4s)
 
-      Score    ██████████████░░░░░░  70/100
-      Grade    ▌▌▌ B ▐▐▐
-      Verdict  ✓ PROTECTED
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      ██████████████████░░░░░░  70/100  B
 
-   ┌────────────────────────────────────────────────────┐
-   │ 🔐  Layer 1 — DNS Authentication                  │
-   └────────────────────────────────────────────────────┘
+      ✓ PROTECTED
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   🔐  DNS Authentication
+   ────────────────────────────────────────────────────────
       MX Record        ✓  smtp.google.com
       SPF              ~all (softfail)
                        v=spf1 include:_spf.google.com ~all
@@ -88,28 +87,24 @@ $ python spoofscore.py google.com
       Reporting        mailto:mailauth-reports@google.com
       DKIM             ✓  selectors: 20230601, 20221208
 
-   ┌────────────────────────────────────────────────────┐
-   │ 🔒  Layer 2 — SMTP/TLS Probing                    │
-   └────────────────────────────────────────────────────┘
+   🔒  SMTP/TLS Probing
+   ────────────────────────────────────────────────────────
       STARTTLS         Yes
       TLS Version      TLSv1.3
       Cipher           TLS_AES_256_GCM_SHA384
 
-   ┌────────────────────────────────────────────────────┐
-   │ 📧  Layer 3 — Mail Platform                       │
-   └────────────────────────────────────────────────────┘
+   📧  Mail Platform
+   ────────────────────────────────────────────────────────
       Provider         Google
 
-   ┌────────────────────────────────────────────────────┐
-   │ 🔗  Layer 4 — SPF Chain Analysis                   │
-   └────────────────────────────────────────────────────┘
+   🔗  SPF Chain Analysis
+   ────────────────────────────────────────────────────────
       DNS Lookups      1/10
       Void Lookups     0/2
       Chain Depth      1
 
-   ┌────────────────────────────────────────────────────┐
-   │ 🛡️  Layer 5 — Transport & Reputation               │
-   └────────────────────────────────────────────────────┘
+   🛡️  Transport & Reputation
+   ────────────────────────────────────────────────────────
       MTA-STS          ✓  RFC 8461
       DANE/TLSA        ✗  RFC 7672
       BIMI             ✗
@@ -117,14 +112,8 @@ $ python spoofscore.py google.com
       FCrDNS           Verified  sd-in-f27.1e100.net
       RBL Status       Clean  10 zones scanned
 
-   ┌────────────────────────────────────────────────────┐
-   │ 🔀  Layer 9 — Routing Risk Analysis               │
-   └────────────────────────────────────────────────────┘
-      Routing          ✓  DIRECT  MX points to Exchange Online
-
-   ┌────────────────────────────────────────────────────┐
-   │ 📊  Layer 6 — Score Breakdown                      │
-   └────────────────────────────────────────────────────┘
+   📊  Score Breakdown
+   ────────────────────────────────────────────────────────
       DMARC          ██████████ +30/30  p=reject
       SPF            ████████░░ +15/20  softfail
       DKIM           ██████████ +15/15
@@ -132,9 +121,7 @@ $ python spoofscore.py google.com
       MTA-STS        ██████████ +10/10
       DANE/TLSA      ░░░░░░░░░░  +0/10
       ────────────────────────────────────────────
-      TOTAL          ██████████████░░░░░░  70/100  B
-
-   ✓  PROTECTED — DMARC enforcement blocks email spoofing
+      TOTAL          ██████████████████░░░░░░  70/100  B
 
    Completed in 12.4s
 ```

@@ -878,9 +878,8 @@ def fmt_spf(mech):
     return f"{RD}{B}missing{R}"
 
 def section(icon, title):
-    print(f"\n   {CY}┌{'─'*52}┐{R}")
-    print(f"   {CY}│{R} {icon}  {B}{WH}{title}{R}")
-    print(f"   {CY}└{'─'*52}┘{R}")
+    print(f"\n   {icon}  {B}{WH}{title}{R}")
+    print(f"   {DM}{'─'*52}{R}")
 
 def row(label, value, extra=""):
     label_padded = f"{label:<16}"
@@ -895,19 +894,22 @@ def print_report(r, elapsed=0):
     gc, _ = GRADE_STYLE.get(grade, (CY, ""))
 
     time_str = f" {DM}({fmt_time(elapsed)}){R}" if elapsed else ""
-    print(f"\n   {CY}{'━' * 54}{R}")
+
+    if r["spoofable"]:
+        verdict_bg, verdict_icon, verdict_text = BG_RD, "⚠", "SPOOFABLE"
+    else:
+        verdict_bg, verdict_icon, verdict_text = BG_GR, "✓", "PROTECTED"
+
+    print(f"\n   {CY}{'━' * 56}{R}")
     print(f"   {B}{WH}{r['domain']}{R}{time_str}")
     print()
-    print(f"      Score    {score_bar(score)}  {gc}{B}{score}/100{R}")
-    print(f"      Grade    {gc}{B}{'▌' * 3} {grade} {'▐' * 3}{R}")
-    if r["spoofable"]:
-        print(f"      Verdict  {RD}{B}⚠ SPOOFABLE{R}")
-    else:
-        print(f"      Verdict  {GR}{B}✓ PROTECTED{R}")
-    print(f"   {CY}{'━' * 54}{R}")
+    print(f"      {score_bar(score, 24)}  {gc}{B}{score}{R}{DM}/100{R}  {gc}{B}{grade}{R}")
+    print()
+    print(f"      {verdict_bg}{WH}{B} {verdict_icon} {verdict_text} {R}")
+    print(f"   {CY}{'━' * 56}{R}")
 
     # Layer 1: DNS Authentication
-    section("🔐", "Layer 1 — DNS Authentication")
+    section("🔐", "DNS Authentication")
     row("MX Record", tag(r["mx"]["has_mx"]),
         r["mx"]["mx_primary"] or "no MX")
     row("SPF", fmt_spf(r["spf"]["spf_mechanism"]))
@@ -924,7 +926,7 @@ def print_report(r, elapsed=0):
         print(f"      {YL}{'':>16} ⚠ Wildcard _domainkey detected (catch-all){R}")
 
     # Layer 2: SMTP/TLS
-    section("🔒", "Layer 2 — SMTP/TLS Probing")
+    section("🔒", "SMTP/TLS Probing")
     starttls_val = r["smtp"]["starttls"]
     if starttls_val == "Yes":
         row("STARTTLS", f"{GR}{B}Yes{R}")
@@ -944,7 +946,7 @@ def print_report(r, elapsed=0):
     row("Cipher", f"{r['smtp']['tls_cipher'] or '—'}")
 
     # Layer 3: Mail Platform
-    section("📧", "Layer 3 — Mail Platform")
+    section("📧", "Mail Platform")
     plat = r["platform"]
     plat_icons = {
         "Google Workspace": "Google", "Microsoft 365": "Microsoft",
@@ -953,7 +955,7 @@ def print_report(r, elapsed=0):
     row("Provider", f"{B}{plat_icons.get(plat, plat)}{R}")
 
     # Layer 4: SPF Chain
-    section("🔗", "Layer 4 — SPF Chain Analysis")
+    section("🔗", "SPF Chain Analysis")
     lookups = ch["spf_lookups"]
     lookup_color = GR if lookups <= 7 else YL if lookups <= 10 else RD
     row("DNS Lookups", f"{lookup_color}{B}{lookups}{R}{DM}/10{R}",
@@ -967,8 +969,8 @@ def print_report(r, elapsed=0):
         for dang in ch["spf_dangling"]:
             print(f"      {RD}  ⚠ Dangling: {B}{dang}{R} {DM}(NXDOMAIN — takeover risk){R}")
 
-    # Layer 5: Transport Security
-    section("🛡️ ", "Layer 5 — Transport & Reputation")
+    # Layer 5: Transport & Reputation
+    section("🛡️ ", "Transport & Reputation")
     row("MTA-STS", tag(r["mta_sts"]), "RFC 8461")
     row("DANE/TLSA", tag(r["dane"]), "RFC 7672")
     row("BIMI", tag(r["bimi"]["present"]))
@@ -989,24 +991,21 @@ def print_report(r, elapsed=0):
     if r.get("sp_mismatch"):
         print(f"      {YL}  ⚠ sp=none with p={r['dmarc']['dmarc_policy']}{R} {DM}(subdomains spoofable){R}")
 
-    # Layer 9: Routing Risk
+    # Routing Risk (only relevant for M365 / Exchange Online domains)
     rr = r.get("routing_risk", {})
-    if rr.get("indirect_mx") or rr.get("eol_endpoint"):
-        section("🔀", "Layer 9 — Routing Risk Analysis")
-        if rr.get("indirect_mx"):
-            row("Routing", f"{RD}{B}INDIRECT MX{R}", "Ghost-Sender risk")
-            row("MX Target", f"{rr['mx_target']}")
-            row("EOL Endpoint", f"{RD}{rr['eol_endpoint']}{R}", "directly accessible")
-            print(f"      {RD}  ⚠ Exchange Online tenant accepts direct connections.{R}")
-            print(f"      {RD}    Spoofed mail can bypass security gateway entirely.{R}")
-        else:
-            row("Routing", f"{GR}{B}DIRECT{R}", "MX points to Exchange Online")
+    if rr.get("indirect_mx"):
+        section("🔀", "Routing Risk")
+        row("Routing", f"{RD}{B}INDIRECT MX{R}", "Ghost-Sender risk")
+        row("MX Target", f"{rr['mx_target']}")
+        row("EOL Endpoint", f"{RD}{rr['eol_endpoint']}{R}", "directly accessible")
+        print(f"      {RD}  ⚠ Exchange Online tenant accepts direct connections.{R}")
+        print(f"      {RD}    Spoofed mail can bypass security gateway entirely.{R}")
     elif r.get("platform") == "Microsoft 365":
-        section("🔀", "Layer 9 — Routing Risk Analysis")
+        section("🔀", "Routing Risk")
         row("Routing", f"{GR}{B}DIRECT{R}", "MX points to Exchange Online")
 
-    # Layer 6: Score Breakdown
-    section("📊", "Layer 6 — Score Breakdown")
+    # Score Breakdown
+    section("📊", "Score Breakdown")
     dmarc_pts = w["dmarc"].get(r["dmarc"]["dmarc_policy"], 0)
     spf_pts = w["spf"].get(r["spf"]["spf_mechanism"], 0)
     dkim_pts = w["dkim"] if r["dkim"]["dkim_found"] else 0
@@ -1058,20 +1057,11 @@ def print_report(r, elapsed=0):
     total = max(0, min(100, dmarc_pts + spf_pts + dkim_pts + tls_pts + mta_pts + dane_pts + spf_pen + void_pen + perm_pen + rbl_pen + sp_pen + route_pen))
     print(f"      {B}{'TOTAL':<14}{R} {score_bar(total)}  {gc}{B}{total}/100  {grade}{R}")
 
-    # Verdict banner
     print()
-    if r["spoofable"]:
-        line = "  ⚠  SPOOFABLE — This domain can be impersonated via email  "
-        print(f"   {BG_RD}{WH}{B}{line}{R}")
-    else:
-        line = "  ✓  PROTECTED — DMARC enforcement blocks email spoofing    "
-        print(f"   {BG_GR}{WH}{B}{line}{R}")
 
     # Remediation
     if r.get("remediation"):
-        print(f"\n   {CY}┌{'─'*52}┐{R}")
-        print(f"   {CY}│{R} 🔧  {B}{WH}Remediation{R}")
-        print(f"   {CY}└{'─'*52}┘{R}")
+        section("🔧", "Remediation")
         prio_style = {"CRITICAL": (RD, "◆"), "HIGH": (YL, "▲"), "MEDIUM": (CY, "●"), "LOW": (DM, "○")}
         for fix in r["remediation"]:
             pc, icon = prio_style.get(fix["priority"], (DM, "○"))
