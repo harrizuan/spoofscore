@@ -37,13 +37,13 @@
 
 ---
 
-Most email security tools ask: *"Is your DNS configured correctly?"*
+Most DMARC checkers and email security tools ask: *"Is your DNS configured correctly?"*
 
 SpoofScore asks a different question:
 
 > **"Can an attacker send email as you, right now?"**
 
-One command. Eleven layers. A clear answer: **SPOOFABLE** or **PROTECTED**.
+An open-source email spoofing scanner that goes beyond basic SPF/DKIM/DMARC validation. It probes 11 layers of your email security stack — from DNS authentication and DKIM key strength to supply-chain attacks like Ghost-Sender, EchoSpoofing, and BreakSPF — and returns a composite score (0-100) with a clear verdict: **SPOOFABLE** or **PROTECTED**.
 
 ---
 
