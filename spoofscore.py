@@ -487,11 +487,36 @@ def check_tls_rpt(domain):
 # Layer 9: Routing Risk Analysis (Ghost-Sender Detection)
 # ═══════════════════════════════════════════════════════════════
 
+SECURITY_GATEWAY_PATTERNS = [
+    "pphosted.com", "ppe-hosted.com",
+    "mimecast.com", "mimecast-offshore.com",
+    "barracudanetworks.com",
+    "messagelabs.com", "symanteccloud.com",
+    "iphmx.com",
+    "fireeyecloud.com", "fireeye.com",
+    "trendmicro.com", "in.trendmicro.eu",
+    "forcepoint.com",
+    "sophos.com",
+    "ess.cisco.com",
+    "exclaimer.net",
+    "spamh.com",
+]
+
+def _is_security_gateway(mx_host):
+    """Check if MX hostname belongs to a known email security gateway."""
+    mx_lower = mx_host.lower()
+    for pattern in SECURITY_GATEWAY_PATTERNS:
+        if pattern in mx_lower:
+            return True
+    if mx_lower.endswith(".gov.sg") and "ict" in mx_lower:
+        return True
+    return False
+
 def check_routing_risk(domain, mx_host):
     """Detect indirect MX routing to Exchange Online (Ghost-Sender risk).
-    If MX points to a third-party gateway but an Exchange Online tenant
-    endpoint exists, attackers can deliver spoofed mail directly to the
-    tenant, bypassing the security gateway and all authentication."""
+    Only flags when MX points to a known security gateway AND an Exchange
+    Online tenant endpoint is directly accessible behind it. Domains using
+    Google, Amazon SES, or self-hosted mail are not affected."""
     result = {"indirect_mx": False, "eol_endpoint": "", "risk": "", "mx_target": ""}
     if not mx_host:
         return result
@@ -499,6 +524,9 @@ def check_routing_risk(domain, mx_host):
     mx_lower = mx_host.lower()
 
     if "protection.outlook.com" in mx_lower:
+        return result
+
+    if not _is_security_gateway(mx_host):
         return result
 
     eol_host = domain.replace(".", "-") + ".mail.protection.outlook.com"
