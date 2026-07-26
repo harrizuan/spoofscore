@@ -10,8 +10,8 @@ authors:
 repository-code: https://github.com/harrizuan/spoofscore
 url: https://www.tfsec.org
 license: MIT
-version: 2.0.0
-date-released: "2026-07-25"
+version: 2.1.0
+date-released: "2026-07-26"
 keywords:
   - email-security
   - dmarc

@@ -1,19 +1,19 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/🛡️_SpoofScore-v2.0.0-blue?style=for-the-badge&labelColor=0d1117" alt="SpoofScore v2.0.0" />
+  <img src="https://img.shields.io/badge/🛡️_SpoofScore-v2.1.0-blue?style=for-the-badge&labelColor=0d1117" alt="SpoofScore v2.1.0" />
 </p>
 
 <h1 align="center">SpoofScore</h1>
 
 <p align="center">
   <b>Can someone impersonate your domain via email?</b><br>
-  <sub>8 layer email security scanner with scoring, spoofability verdict, and copy paste remediation.</sub>
+  <sub>9 layer email security scanner with scoring, spoofability verdict, and copy paste remediation.</sub>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.8+-3776AB?logo=python&logoColor=white" alt="Python 3.8+" />
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" />
   <img src="https://img.shields.io/badge/dependencies-1_(dnspython)-brightgreen" alt="Dependencies: 1" />
-  <img src="https://img.shields.io/badge/layers-8-blueviolet" alt="8 Layers" />
+  <img src="https://img.shields.io/badge/layers-9-blueviolet" alt="9 Layers" />
   <img src="https://img.shields.io/badge/DKIM_selectors-80+-orange" alt="80+ DKIM Selectors" />
   <img src="https://img.shields.io/badge/RBL_zones-10-red" alt="10 RBL Zones" />
 </p>
@@ -29,7 +29,7 @@
 
 <p align="center">
   <a href="#quick-start">Quick Start</a> •
-  <a href="#what-it-checks">8 Layers</a> •
+  <a href="#what-it-checks">9 Layers</a> •
   <a href="#scoring-model">Scoring</a> •
   <a href="#how-it-differs">vs Competitors</a> •
   <a href="#usage">Usage</a>
@@ -43,7 +43,7 @@ SpoofScore asks a different question:
 
 > **"Can an attacker send email as you, right now?"**
 
-One command. Eight layers. A clear answer: **SPOOFABLE** or **PROTECTED**.
+One command. Nine layers. A clear answer: **SPOOFABLE** or **PROTECTED**.
 
 ---
 
@@ -62,7 +62,7 @@ $ python spoofscore.py google.com
 \       /|  |        `'  '-'  '   `'  '-'  '  \|  |_)        | |       | '--'  /  |  | |  |('  '-'(_.-' |   |('  '-'(_.-'
  `-----' `--'          `-----'      `-----'    `--'          `-'       `------'   `--' `--'  `-----'    `---'  `-----'
                                                                     github.com/harrizuan/spoofscore
-   SpoofScore v2.0.0    Can someone impersonate your domain via email?
+   SpoofScore v2.1.0    Can someone impersonate your domain via email?
 
    Scanning 1 domain...
 
@@ -117,6 +117,11 @@ $ python spoofscore.py google.com
       RBL Status       Clean  10 zones scanned
 
    ┌────────────────────────────────────────────────────┐
+   │ 🔀  Layer 9 — Routing Risk Analysis               │
+   └────────────────────────────────────────────────────┘
+      Routing          ✓  DIRECT  MX points to Exchange Online
+
+   ┌────────────────────────────────────────────────────┐
    │ 📊  Layer 6 — Score Breakdown                      │
    └────────────────────────────────────────────────────┘
       DMARC          ██████████ +30/30  p=reject
@@ -158,6 +163,7 @@ That's it. One dependency. No config files. No API keys.
 | 6 | **Reputation** | RBL/DNSBL scan | 10 major blocklist zones (Spamhaus, SpamCop, Barracuda, SORBS, UCEPROTECT) |
 | 7 | **Infrastructure** | FCrDNS, DMARC sp= | Forward-confirmed reverse DNS + subdomain policy mismatch |
 | 8 | **Composite Score** | Weighted 0-100 | Spoofability verdict + remediation with exact DNS records to copy paste |
+| 9 | **Routing Risk** | Ghost-Sender detection | Indirect MX to Exchange Online: gateway bypass via direct tenant delivery |
 
 ---
 
@@ -193,6 +199,7 @@ That's it. One dependency. No config files. No API keys.
 | RBL blocklisted | **-10** |
 | SPF exceeds 10-lookup limit | -5 |
 | DMARC `sp=` mismatch | -5 |
+| Routing risk (Ghost-Sender) | **-5** |
 | SPF void lookups > 2 | -3 |
 
 **Grades**
@@ -223,7 +230,7 @@ That's it. One dependency. No config files. No API keys.
 |:-----------|:----------:|:------:|:--------:|:----------:|:-------------:|:--------:|
 | **Primary question** | Spoofable? | Spoofable? | Bypass auth? | Valid record? | Security grade? | DNS secure? |
 | Composite 0-100 score | ✅ | ❌ | ❌ | ❌ | Penalty | Finding |
-| 8-layer analysis | ✅ | ❌ | ❌ | ❌ | Partial | DNS only |
+| 9-layer analysis | ✅ | ❌ | ❌ | ❌ | Partial | DNS only |
 | Spoofability verdict | ✅ | ✅ | N/A | ❌ | ❌ | ❌ |
 | Wildcard DKIM canary | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Provider-aware DKIM | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
@@ -236,6 +243,7 @@ That's it. One dependency. No config files. No API keys.
 | MTA-STS + DANE | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
 | BIMI + TLS-RPT | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
 | Remediation w/ DNS records | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Ghost-Sender detection | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Batch CSV for research | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ |
 | Dependencies | **1** | 2 | 5+ | 7 | 6+ | 3 |
 
@@ -340,6 +348,8 @@ python spoofscore.py -f 1000-domains.txt -o scan.csv --smtp-threads 30
 | `fcrdns_verified` | Forward-confirmed |
 | `sp_mismatch` | sp= policy mismatch |
 | `dkim_wildcard` | Wildcard _domainkey detected |
+| `routing_risk` | Ghost-Sender routing risk detected |
+| `routing_eol_endpoint` | Direct Exchange Online endpoint |
 
 </details>
 
@@ -386,6 +396,7 @@ python spoofscore.py -f 1000-domains.txt -o scan.csv --smtp-threads 30
 - Python 3.8+ required. Only one dependency: `dnspython`
 - DKIM probes 80+ selectors. Custom selectors may still be missed
 - RBL checks query 10 major blocklist zones. Some zones may rate limit
+- Layer 9 checks for Ghost-Sender routing risk (indirect MX to Exchange Online)
 - This is a point in time scan. DNS records and mail server configs change
 
 ```bash
@@ -401,7 +412,7 @@ pip install dnspython
 ---
 
 <p align="center">
-  <sub>Built by <a href="https://www.tfsec.org">bau1u</a>. One dependency. One question. One answer.</sub><br>
+  <sub>Built by <a href="https://www.tfsec.org">bau1u</a>. One dependency. Nine layers. One answer.</sub><br>
   <b>Can someone impersonate your domain?</b><br>
   <sub>Find out in seconds.</sub>
 </p>

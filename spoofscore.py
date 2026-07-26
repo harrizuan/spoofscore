@@ -2,7 +2,7 @@
 """
 SpoofScore — Multi-Layer Email Security Scanner
 
-Scans any domain across 8 security layers and produces a composite score (0-100).
+Scans any domain across 9 security layers and produces a composite score (0-100).
 Answers one question: "Can someone impersonate this domain via email?"
 
 Usage:
@@ -20,6 +20,7 @@ Layers:
     4. SPF Chain Analysis  — Recursive include walking, RFC 7208 10-lookup limit, dangling includes
     5. Transport Security  — MTA-STS (RFC 8461), DANE/TLSA (RFC 7672), BIMI, TLS-RPT
     6. Composite Score     — Weighted 0-100 score with letter grade (A/B/C/D/F)
+    9. Routing Risk        — Ghost-Sender detection: indirect MX to Exchange Online
 
 Unlike generic email configuration auditors, SpoofScore focuses on spoofability:
 "Can someone impersonate this domain?" — not just "is the domain configured correctly?"
@@ -48,7 +49,7 @@ except ImportError:
     print("ERROR: dnspython is required.\n  pip install dnspython")
     sys.exit(1)
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 
 DKIM_SELECTORS = [
     "default", "google", "google2048", "gm1", "gm2", "gm3",
@@ -483,6 +484,42 @@ def check_tls_rpt(domain):
 
 
 # ═══════════════════════════════════════════════════════════════
+# Layer 9: Routing Risk Analysis (Ghost-Sender Detection)
+# ═══════════════════════════════════════════════════════════════
+
+def check_routing_risk(domain, mx_host):
+    """Detect indirect MX routing to Exchange Online (Ghost-Sender risk).
+    If MX points to a third-party gateway but an Exchange Online tenant
+    endpoint exists, attackers can deliver spoofed mail directly to the
+    tenant, bypassing the security gateway and all authentication."""
+    result = {"indirect_mx": False, "eol_endpoint": "", "risk": "", "mx_target": ""}
+    if not mx_host:
+        return result
+
+    mx_lower = mx_host.lower()
+
+    if "protection.outlook.com" in mx_lower:
+        return result
+
+    eol_host = domain.replace(".", "-") + ".mail.protection.outlook.com"
+    try:
+        r = make_resolver()
+        r.resolve(eol_host, "A")
+        result["indirect_mx"] = True
+        result["eol_endpoint"] = eol_host
+        result["mx_target"] = mx_host
+        result["risk"] = (
+            f"MX routes to {mx_host} but Exchange Online endpoint "
+            f"{eol_host} is directly accessible. Ghost-Sender risk: "
+            f"spoofed mail can bypass the security gateway entirely."
+        )
+    except Exception:
+        pass
+
+    return result
+
+
+# ═══════════════════════════════════════════════════════════════
 # Layer 6: Composite Score
 # ═══════════════════════════════════════════════════════════════
 
@@ -498,6 +535,7 @@ SCORE_WEIGHTS = {
     "rbl_penalty": -10,
     "sp_mismatch_penalty": -5,
     "permissive_spf_penalty": -10,
+    "routing_risk_penalty": -5,
 }
 
 def compute_score(result):
@@ -535,6 +573,9 @@ def compute_score(result):
     if result.get("sp_mismatch"):
         score += SCORE_WEIGHTS["sp_mismatch_penalty"]
 
+    if result.get("routing_risk", {}).get("indirect_mx"):
+        score += SCORE_WEIGHTS["routing_risk_penalty"]
+
     score = max(0, min(100, score))
 
     if score >= 80:   grade = "A"
@@ -555,40 +596,43 @@ def scan_domain(domain, json_mode=False):
     result = {"domain": domain}
     t0 = time.time()
 
-    show_progress(domain, 0, json_mode=json_mode)
+    show_progress(domain, 0, total_steps=9, json_mode=json_mode)
     result["mx"] = check_mx(domain)
     result["spf"] = check_spf(domain)
     result["dmarc"] = check_dmarc(domain)
 
-    show_progress(domain, 1, json_mode=json_mode)
+    show_progress(domain, 1, total_steps=9, json_mode=json_mode)
     mx_host = result["mx"]["mx_primary"]
     result["platform"] = fingerprint_platform(mx_host, domain)
 
-    show_progress(domain, 2, json_mode=json_mode)
+    show_progress(domain, 2, total_steps=9, json_mode=json_mode)
     result["dkim"] = check_dkim(domain, result["platform"])
 
-    show_progress(domain, 3, json_mode=json_mode)
+    show_progress(domain, 3, total_steps=9, json_mode=json_mode)
     result["smtp"] = probe_smtp(mx_host)
 
-    show_progress(domain, 4, json_mode=json_mode)
+    show_progress(domain, 4, total_steps=9, json_mode=json_mode)
     result["spf_chain"] = analyze_spf_chain(domain)
 
-    show_progress(domain, 5, json_mode=json_mode)
+    show_progress(domain, 5, total_steps=9, json_mode=json_mode)
     result["mta_sts"] = check_mta_sts(domain)
     result["dane"] = check_dane(mx_host)
     result["bimi"] = check_bimi(domain)
     result["tls_rpt"] = check_tls_rpt(domain)
 
-    show_progress(domain, 6, json_mode=json_mode)
+    show_progress(domain, 6, total_steps=9, json_mode=json_mode)
     result["rbl"] = check_rbl(mx_host)
     result["fcrdns"] = check_fcrdns(mx_host)
 
-    show_progress(domain, 7, json_mode=json_mode)
+    show_progress(domain, 7, total_steps=9, json_mode=json_mode)
     dmarc_sp = result["dmarc"].get("dmarc_sp", "")
     dmarc_p = result["dmarc"]["dmarc_policy"]
     result["sp_mismatch"] = (
         dmarc_p in ("reject", "quarantine") and dmarc_sp == "none"
     )
+
+    show_progress(domain, 8, total_steps=9, json_mode=json_mode)
+    result["routing_risk"] = check_routing_risk(domain, mx_host)
 
     score, grade = compute_score(result)
     result["score"] = score
@@ -713,6 +757,19 @@ def generate_remediation(result):
             "record": "",
         })
 
+    rr = result.get("routing_risk", {})
+    if rr.get("indirect_mx"):
+        fixes.append({
+            "priority": "CRITICAL",
+            "issue": f"Ghost-Sender risk: MX routes to {rr.get('mx_target', 'third-party')} but Exchange Online endpoint {rr.get('eol_endpoint', '')} is directly accessible.",
+            "fix": (
+                "Point MX directly to Exchange Online (*.mail.protection.outlook.com), "
+                "or configure Exchange Online to reject inbound mail not originating from "
+                "your security gateway's IP range using Connector + Enhanced Filtering."
+            ),
+            "record": "",
+        })
+
     return fixes
 
 
@@ -768,9 +825,10 @@ LAYER_NAMES = [
     ("🛡️ ", "Transport"),
     ("📡", "Reputation"),
     ("⚙️ ", "Scoring"),
+    ("🔀", "Routing"),
 ]
 
-def show_progress(domain, step, total_steps=8, json_mode=False):
+def show_progress(domain, step, total_steps=9, json_mode=False):
     if json_mode:
         return
     icon, name = LAYER_NAMES[step] if step < len(LAYER_NAMES) else ("⚙️ ", "Scoring")
@@ -930,6 +988,22 @@ def print_report(r, elapsed=0):
     if r.get("sp_mismatch"):
         print(f"      {YL}  ⚠ sp=none with p={r['dmarc']['dmarc_policy']}{R} {DM}(subdomains spoofable){R}")
 
+    # Layer 9: Routing Risk
+    rr = r.get("routing_risk", {})
+    if rr.get("indirect_mx") or rr.get("eol_endpoint"):
+        section("🔀", "Layer 9 — Routing Risk Analysis")
+        if rr.get("indirect_mx"):
+            row("Routing", f"{RD}{B}INDIRECT MX{R}", "Ghost-Sender risk")
+            row("MX Target", f"{rr['mx_target']}")
+            row("EOL Endpoint", f"{RD}{rr['eol_endpoint']}{R}", "directly accessible")
+            print(f"      {RD}  ⚠ Exchange Online tenant accepts direct connections.{R}")
+            print(f"      {RD}    Spoofed mail can bypass security gateway entirely.{R}")
+        else:
+            row("Routing", f"{GR}{B}DIRECT{R}", "MX points to Exchange Online")
+    elif r.get("platform") == "Microsoft 365":
+        section("🔀", "Layer 9 — Routing Risk Analysis")
+        row("Routing", f"{GR}{B}DIRECT{R}", "MX points to Exchange Online")
+
     # Layer 6: Score Breakdown
     section("📊", "Layer 6 — Score Breakdown")
     dmarc_pts = w["dmarc"].get(r["dmarc"]["dmarc_policy"], 0)
@@ -947,6 +1021,7 @@ def print_report(r, elapsed=0):
     void_pen = w["spf_void_penalty"] if ch.get("spf_void_exceeds") else 0
     rbl_pen = w["rbl_penalty"] if r.get("rbl", {}).get("listed") else 0
     sp_pen = w["sp_mismatch_penalty"] if r.get("sp_mismatch") else 0
+    route_pen = w["routing_risk_penalty"] if r.get("routing_risk", {}).get("indirect_mx") else 0
 
     def pts_color(val, maximum):
         if val <= 0: return RD
@@ -977,8 +1052,9 @@ def print_report(r, elapsed=0):
     penalty_row("SPF +all", perm_pen, "allows any sender")
     penalty_row("RBL", rbl_pen, "blocklisted")
     penalty_row("sp= mismatch", sp_pen, "subdomain policy gap")
+    penalty_row("Routing risk", route_pen, "Ghost-Sender")
     print(f"      {CY}{'─' * 44}{R}")
-    total = max(0, min(100, dmarc_pts + spf_pts + dkim_pts + tls_pts + mta_pts + dane_pts + spf_pen + void_pen + perm_pen + rbl_pen + sp_pen))
+    total = max(0, min(100, dmarc_pts + spf_pts + dkim_pts + tls_pts + mta_pts + dane_pts + spf_pen + void_pen + perm_pen + rbl_pen + sp_pen + route_pen))
     print(f"      {B}{'TOTAL':<14}{R} {score_bar(total)}  {gc}{B}{total}/100  {grade}{R}")
 
     # Verdict banner
@@ -1043,6 +1119,8 @@ def result_to_flat(r):
         "fcrdns_verified": "Yes" if r.get("fcrdns", {}).get("verified") else "No",
         "sp_mismatch": "Yes" if r.get("sp_mismatch") else "No",
         "dkim_wildcard": "Yes" if r.get("dkim", {}).get("dkim_wildcard") else "No",
+        "routing_risk": "Yes" if r.get("routing_risk", {}).get("indirect_mx") else "No",
+        "routing_eol_endpoint": r.get("routing_risk", {}).get("eol_endpoint", ""),
     }
 
 
@@ -1053,7 +1131,7 @@ def result_to_flat(r):
 def main():
     parser = argparse.ArgumentParser(
         prog="spoofscore",
-        description="Multi-layer email security scanner. Checks 8 layers and assigns a composite spoofability score (0-100).",
+        description="Multi-layer email security scanner. Checks 9 layers and assigns a composite spoofability score (0-100).",
         epilog="https://github.com/harrizuan/spoofscore — License: MIT",
     )
     parser.add_argument("domains", nargs="*", help="Domain(s) to scan")
