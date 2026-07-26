@@ -86,61 +86,44 @@ That's it. One dependency. No config files. No API keys.
 
 ## Scoring Model
 
-<table>
-<tr>
-<td>
+```
+  Score = Base Points + Penalties        Grade Scale
+  ┌─────────────────────────────┐        ┌───────────┐
+  │  DMARC p=reject      +30   │        │ A  80-100  │
+  │  DMARC p=quarantine  +15   │        │ B  60-79   │
+  │  DMARC p=none         +5   │        │ C  40-59   │
+  │  SPF -all (hardfail)  +20  │        │ D  20-39   │
+  │  SPF ~all (softfail)  +15  │        │ F   0-19   │
+  │  DKIM present         +15  │        └───────────┘
+  │  TLS 1.3              +15  │
+  │  TLS 1.2              +10  │        Max: 100
+  │  MTA-STS              +10  │        Spoofable: < 60
+  │  DANE/TLSA            +10  │        Protected: ≥ 60
+  └─────────────────────────────┘
+```
 
-**Positive Signals**
+<details>
+<summary><b>All 15 penalties (interaction-aware deductions)</b></summary>
 
-| Component | Points |
-|-----------|-------:|
-| DMARC `p=reject` | **+30** |
-| DMARC `p=quarantine` | +15 |
-| DMARC `p=none` | +5 |
-| SPF `-all` (hardfail) | **+20** |
-| SPF `~all` (softfail) | +15 |
-| DKIM present | +15 |
-| TLS 1.3 | +15 |
-| TLS 1.2 | +10 |
-| MTA-STS | +10 |
-| DANE/TLSA | +10 |
+| Category | Issue | Pts |
+|:---------|:------|----:|
+| **Critical** | SPF `+all` (anyone can send as you) | **-10** |
+| **Critical** | RBL blocklisted (active abuse) | **-10** |
+| **High** | Ghost-Sender gateway bypass | **-5** |
+| **High** | EchoSpoofing relay abuse | **-5** |
+| **High** | SPF exceeds 10-lookup limit | -5 |
+| **High** | DMARC `sp=` subdomain mismatch | -5 |
+| **High** | DMARC `pct` < 100 (partial enforcement) | -5 |
+| **High** | DMARC `t=y` testing mode | -5 |
+| **Medium** | Relaxed SPF+DKIM alignment | -3 |
+| **Medium** | Multiple SPF records | -3 |
+| **Medium** | Multiple DMARC records | -3 |
+| **Medium** | Weak DKIM key (<=1024-bit) | -3 |
+| **Medium** | SPF void lookups > 2 | -3 |
+| **Low** | SPF `ptr` mechanism (deprecated) | -2 |
+| **Low** | SPF wide CIDR (<=\/20) | -2 |
 
-</td>
-<td>
-
-**Penalties**
-
-| Issue | Points |
-|-------|-------:|
-| SPF `+all` (permissive) | **-10** |
-| RBL blocklisted | **-10** |
-| SPF exceeds 10-lookup limit | -5 |
-| DMARC `sp=` mismatch | -5 |
-| Ghost-Sender routing risk | **-5** |
-| EchoSpoofing risk | **-5** |
-| DMARC `pct` < 100 | -5 |
-| DMARC `t=y` testing mode | -5 |
-| Relaxed SPF+DKIM alignment | -3 |
-| Multiple SPF records | -3 |
-| Multiple DMARC records | -3 |
-| Weak DKIM key (<=1024-bit) | -3 |
-| SPF `ptr` mechanism | -2 |
-| SPF wide CIDR (<=\/20) | -2 |
-| SPF void lookups > 2 | -3 |
-
-**Grades**
-
-| Grade | Score |
-|:-----:|------:|
-| **A** | 80-100 |
-| **B** | 60-79 |
-| **C** | 40-59 |
-| **D** | 20-39 |
-| **F** | 0-19 |
-
-</td>
-</tr>
-</table>
+</details>
 
 ---
 
