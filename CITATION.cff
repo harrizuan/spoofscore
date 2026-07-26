@@ -4,13 +4,13 @@ message: "If you use this tool, please cite it using the metadata below."
 type: software
 authors:
   - given-names: Ahmad Al Harrizuan
-    family-names: Izadin
+    family-names: Bin Izadin
     alias: bau1u
     website: https://www.tfsec.org
 repository-code: https://github.com/harrizuan/spoofscore
 url: https://www.tfsec.org
 license: MIT
-version: 2.1.0
+version: 3.0.0
 date-released: "2026-07-26"
 keywords:
   - email-security
@@ -21,3 +21,7 @@ keywords:
   - scanner
   - red-team
   - security-tool
+  - breakspf
+  - echospoofing
+  - ghost-sender
+  - dmarcbis

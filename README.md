@@ -1,21 +1,21 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/🛡️_SpoofScore-v2.1.0-blue?style=for-the-badge&labelColor=0d1117" alt="SpoofScore v2.1.0" />
+  <img src="https://img.shields.io/badge/🛡️_SpoofScore-v3.0.0-blue?style=for-the-badge&labelColor=0d1117" alt="SpoofScore v3.0.0" />
 </p>
 
 <h1 align="center">SpoofScore</h1>
 
 <p align="center">
   <b>Can someone impersonate your domain via email?</b><br>
-  <sub>9 layer email security scanner with scoring, spoofability verdict, and copy paste remediation.</sub>
+  <sub>11-layer email security scanner with interaction-aware scoring, spoofability verdict, and copy-paste remediation.</sub>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.8+-3776AB?logo=python&logoColor=white" alt="Python 3.8+" />
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" />
   <img src="https://img.shields.io/badge/dependencies-1_(dnspython)-brightgreen" alt="Dependencies: 1" />
-  <img src="https://img.shields.io/badge/layers-9-blueviolet" alt="9 Layers" />
+  <img src="https://img.shields.io/badge/layers-11-blueviolet" alt="11 Layers" />
   <img src="https://img.shields.io/badge/DKIM_selectors-80+-orange" alt="80+ DKIM Selectors" />
-  <img src="https://img.shields.io/badge/RBL_zones-10-red" alt="10 RBL Zones" />
+  <img src="https://img.shields.io/badge/RBL_zones-40-red" alt="40 RBL Zones" />
 </p>
 
 <p align="center">
@@ -29,7 +29,7 @@
 
 <p align="center">
   <a href="#quick-start">Quick Start</a> •
-  <a href="#what-it-checks">9 Layers</a> •
+  <a href="#what-it-checks">11 Layers</a> •
   <a href="#scoring-model">Scoring</a> •
   <a href="#how-it-differs">vs Competitors</a> •
   <a href="#usage">Usage</a>
@@ -43,88 +43,15 @@ SpoofScore asks a different question:
 
 > **"Can an attacker send email as you, right now?"**
 
-One command. Nine layers. A clear answer: **SPOOFABLE** or **PROTECTED**.
+One command. Eleven layers. A clear answer: **SPOOFABLE** or **PROTECTED**.
 
 ---
 
 ## Demo
 
-```
-$ python spoofscore.py google.com
-
-  .-')     _ (`-.                                        .-')                           _  .-')     ('-.
- ( OO ).  ( (OO  )                                      ( OO ).                        ( \( -O )  _(  OO)
-(_)---\_)_.`     \ .-'),-----.  .-'),-----.    ,------.(_)---\_)   .-----.  .-'),-----. ,------. (,------.
-/    _ |(__...--''( OO'  .-.  '( OO'  .-.  '('-| _.---'/    _ |   '  .--./ ( OO'  .-.  '|   /`. ' |  .---'
-\  :` `. |  /  | |/   |  | |  |/   |  | |  |(OO|(_\    \  :` `.   |  |('-. /   |  | |  ||  /  | | |  |
- '..`''.)|  |_.' |\_) |  |\|  |\_) |  |\|  |/  |  '--.  '..`''.) /_) |OO  )\_) |  |\|  ||  |_.' |(|  '--.
-.-._)   \|  .___.'  \ |  | |  |  \ |  | |  |\_)|  .--' .-._)   \ ||  |`-'|   \ |  | |  ||  .  '.' |  .--'
-\       /|  |        `'  '-'  '   `'  '-'  '  \|  |_)  \       /(_'  '--'\    `'  '-'  '|  |\  \  |  `---.
- `-----' `--'          `-----'      `-----'    `--'     `-----'    `-----'      `-----' `--' '--' `------'
-
-   SpoofScore v2.1.0    Can someone impersonate your domain via email?
-   made by bau1u — github.com/harrizuan/spoofscore
-
-   Scanning 1 domain...
-
-   [1/1] google.com
-   ████████████████████ 🔀  Routing
-
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   google.com  (12.4s)
-
-      ██████████████████░░░░░░  70/100  B
-
-      ✓ PROTECTED
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-   🔐  DNS Authentication
-   ────────────────────────────────────────────────────────
-      MX Record        ✓  smtp.google.com
-      SPF              ~all (softfail)
-                       v=spf1 include:_spf.google.com ~all
-      DMARC            reject
-      Reporting        mailto:mailauth-reports@google.com
-      DKIM             ✓  selectors: 20230601, 20221208
-
-   🔒  SMTP/TLS Probing
-   ────────────────────────────────────────────────────────
-      STARTTLS         Yes
-      TLS Version      TLSv1.3
-      Cipher           TLS_AES_256_GCM_SHA384
-
-   📧  Mail Platform
-   ────────────────────────────────────────────────────────
-      Provider         Google
-
-   🔗  SPF Chain Analysis
-   ────────────────────────────────────────────────────────
-      DNS Lookups      1/10
-      Void Lookups     0/2
-      Chain Depth      1
-
-   🛡️  Transport & Reputation
-   ────────────────────────────────────────────────────────
-      MTA-STS          ✓  RFC 8461
-      DANE/TLSA        ✗  RFC 7672
-      BIMI             ✗
-      TLS-RPT          ✗
-      FCrDNS           Verified  sd-in-f27.1e100.net
-      RBL Status       Clean  10 zones scanned
-
-   📊  Score Breakdown
-   ────────────────────────────────────────────────────────
-      DMARC          ██████████ +30/30  p=reject
-      SPF            ████████░░ +15/20  softfail
-      DKIM           ██████████ +15/15
-      TLS            ░░░░░░░░░░  +0/15  none
-      MTA-STS        ██████████ +10/10
-      DANE/TLSA      ░░░░░░░░░░  +0/10
-      ────────────────────────────────────────────
-      TOTAL          ██████████████████░░░░░░  70/100  B
-
-   Completed in 12.4s
-```
+<p align="center">
+  <img src="demo.png" alt="SpoofScore v3.0.0 scanning google.com" width="700" />
+</p>
 
 ---
 
@@ -146,12 +73,14 @@ That's it. One dependency. No config files. No API keys.
 | 1 | **DNS Authentication** | MX, SPF, DMARC, DKIM | Provider-aware DKIM with 80+ selectors + wildcard canary |
 | 2 | **SMTP/TLS Probing** | STARTTLS, TLS version, cipher | Live connection to mail server on port 25 |
 | 3 | **Mail Platform** | Email service provider | Fingerprint from MX hostname (Google, M365, SES, Zoho, ProtonMail, Mimecast) |
-| 4 | **SPF Chain Analysis** | Include tree walking | RFC 7208 10-lookup limit, void lookup limit, dangling include detection |
-| 5 | **Transport Security** | MTA-STS, DANE/TLSA, BIMI, TLS-RPT | Checks all transport protocols (RFC 8461, RFC 7672) |
-| 6 | **Reputation** | RBL/DNSBL scan | 10 major blocklist zones (Spamhaus, SpamCop, Barracuda, SORBS, UCEPROTECT) |
-| 7 | **Infrastructure** | FCrDNS, DMARC sp= | Forward-confirmed reverse DNS + subdomain policy mismatch |
-| 8 | **Composite Score** | Weighted 0-100 | Spoofability verdict + remediation with exact DNS records to copy paste |
-| 9 | **Routing Risk** | Ghost-Sender detection | Indirect MX to Exchange Online: gateway bypass via direct tenant delivery |
+| 4 | **DKIM Key Strength** | Key type, bit length, revocation | RSA vs Ed25519, flags weak keys (<=1024-bit), detects revoked selectors |
+| 5 | **SPF Chain Analysis** | Include tree walking, BreakSPF | RFC 7208 10-lookup limit, void lookups, dangling includes, multi-tenant shared infra, wide CIDR detection |
+| 6 | **Transport Security** | MTA-STS, DANE/TLSA, BIMI, TLS-RPT, DNSSEC | Policy file validation, certificate checks (RFC 8461, RFC 7672) |
+| 7 | **Reputation** | RBL/DNSBL scan | 40 major blocklist zones (Spamhaus, SpamCop, Barracuda, SORBS, UCEPROTECT, and more) |
+| 8 | **Infrastructure** | FCrDNS, DMARC sp=, alignment | Forward-confirmed reverse DNS, subdomain policy mismatch, aspf/adkim analysis |
+| 9 | **Policy Analysis** | pct, t=y, np=, deprecated tags | Detects DMARC testing mode, partial enforcement, and DMARCbis deprecated tags |
+| 10 | **Supply-Chain Risk** | Ghost-Sender, EchoSpoofing | Gateway bypass via direct tenant delivery, Proofpoint relay abuse |
+| 11 | **Composite Score** | Weighted 0-100, interaction penalties | Spoofability verdict + prioritized remediation with exact DNS records |
 
 ---
 
@@ -187,7 +116,16 @@ That's it. One dependency. No config files. No API keys.
 | RBL blocklisted | **-10** |
 | SPF exceeds 10-lookup limit | -5 |
 | DMARC `sp=` mismatch | -5 |
-| Routing risk (Ghost-Sender) | **-5** |
+| Ghost-Sender routing risk | **-5** |
+| EchoSpoofing risk | **-5** |
+| DMARC `pct` < 100 | -5 |
+| DMARC `t=y` testing mode | -5 |
+| Relaxed SPF+DKIM alignment | -3 |
+| Multiple SPF records | -3 |
+| Multiple DMARC records | -3 |
+| Weak DKIM key (<=1024-bit) | -3 |
+| SPF `ptr` mechanism | -2 |
+| SPF wide CIDR (<=\/20) | -2 |
 | SPF void lookups > 2 | -3 |
 
 **Grades**
@@ -218,26 +156,34 @@ That's it. One dependency. No config files. No API keys.
 |:-----------|:----------:|:------:|:--------:|:----------:|:-------------:|:--------:|
 | **Primary question** | Spoofable? | Spoofable? | Bypass auth? | Valid record? | Security grade? | DNS secure? |
 | Composite 0-100 score | ✅ | ❌ | ❌ | ❌ | Penalty | Finding |
-| 9-layer analysis | ✅ | ❌ | ❌ | ❌ | Partial | DNS only |
+| 11-layer analysis | ✅ | ❌ | ❌ | ❌ | Partial | DNS only |
 | Spoofability verdict | ✅ | ✅ | N/A | ❌ | ❌ | ❌ |
 | Wildcard DKIM canary | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Provider-aware DKIM | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| DKIM key strength audit | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | DKIM selectors | **80+** | API | N/A | 0 | 0 | Built-in |
+| BreakSPF detection | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| SPF multi-tenant analysis | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | SPF dangling includes | ✅ | ❌ | ❌ | ❌ | Void only | ❌ |
 | SPF void lookup limit | ✅ | ❌ | ❌ | ✅ | ✅ | ❌ |
 | DMARC `sp=` mismatch | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| RBL/DNSBL zones | **10** | 0 | 0 | 0 | 104 | 13 |
+| DMARC alignment analysis | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| DMARC pct/t=y/np= parsing | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Ghost-Sender detection | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| EchoSpoofing detection | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| RBL/DNSBL zones | **40** | 0 | 0 | 0 | 104 | 13 |
 | FCrDNS | ✅ | ❌ | ❌ | ✅ | Partial | ❌ |
-| MTA-STS + DANE | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| MTA-STS policy validation | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| DANE/TLSA + DNSSEC | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
 | BIMI + TLS-RPT | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
 | Remediation w/ DNS records | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ |
-| Ghost-Sender detection | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Interaction-aware scoring | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Batch CSV for research | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ |
 | Dependencies | **1** | 2 | 5+ | 7 | 6+ | 3 |
 
 > [!NOTE]
 > **Where others beat us (for now):**
-> `mailvalidator` checks 104 RBL zones (we check 10), and `dnsarmor` does DNSSEC chain validation.
+> `mailvalidator` checks 104 RBL zones (we check 40), and `dnsarmor` does DNSSEC chain validation.
 > We focus on the question that matters most to red teams and defenders: **can this domain be spoofed?**
 
 ---
@@ -311,11 +257,20 @@ python spoofscore.py -f 1000-domains.txt -o scan.csv --smtp-threads 30
 | `mx_primary` | Primary MX hostname |
 | `spf_mechanism` | SPF all-mechanism (hardfail/softfail/neutral/permissive/missing) |
 | `spf_record` | Raw SPF TXT record |
+| `spf_multiple` | Multiple SPF records detected |
+| `spf_has_ptr` | SPF uses deprecated `ptr` mechanism |
+| `spf_wide_cidrs` | Wide CIDR ranges (<=\/20) in SPF |
 | `dmarc_policy` | DMARC p= value |
 | `dmarc_record` | Raw DMARC TXT record |
+| `dmarc_effective` | Effective DMARC policy (after pct/t=y) |
+| `dmarc_aspf` | SPF alignment mode (strict/relaxed) |
+| `dmarc_adkim` | DKIM alignment mode (strict/relaxed) |
 | `dmarc_rua` | DMARC aggregate report URI |
 | `dkim_found` | DKIM selector discovered |
 | `dkim_selectors` | Found selector names |
+| `dkim_key_info` | Key type and bit length |
+| `dkim_weak` | Weak key detected (<=1024-bit) |
+| `dkim_dangling` | Dangling DKIM CNAME (subdomain takeover risk) |
 | `starttls` | STARTTLS support |
 | `tls_version` | Negotiated TLS version |
 | `tls_cipher` | Cipher suite |
@@ -326,8 +281,13 @@ python spoofscore.py -f 1000-domains.txt -o scan.csv --smtp-threads 30
 | `spf_void_exceeds` | Exceeds void lookup limit |
 | `spf_dangling` | NXDOMAIN includes |
 | `spf_chain_depth` | Include tree depth |
+| `spf_ip_count` | Total IP ranges in SPF tree |
+| `spf_shared_includes` | Multi-tenant includes found |
+| `spf_multi_tenant_list` | List of shared SPF includes |
 | `mta_sts` | MTA-STS configured |
+| `mta_sts_mode` | MTA-STS policy mode (enforce/testing/none) |
 | `dane_tlsa` | DANE/TLSA present |
+| `dnssec` | DNSSEC validation (AD flag) |
 | `bimi` | BIMI record present |
 | `tls_rpt` | TLS-RPT configured |
 | `rbl_listed` | Blocklisted zones |
@@ -336,8 +296,10 @@ python spoofscore.py -f 1000-domains.txt -o scan.csv --smtp-threads 30
 | `fcrdns_verified` | Forward-confirmed |
 | `sp_mismatch` | sp= policy mismatch |
 | `dkim_wildcard` | Wildcard _domainkey detected |
-| `routing_risk` | Ghost-Sender routing risk detected |
+| `routing_risk` | Ghost-Sender routing risk |
 | `routing_eol_endpoint` | Direct Exchange Online endpoint |
+| `echospoof_risk` | EchoSpoofing relay risk |
+| `laundromarc_risk` | LaunDroMARC report risk |
 
 </details>
 
@@ -354,12 +316,20 @@ python spoofscore.py -f 1000-domains.txt -o scan.csv --smtp-threads 30
   "mx_primary": "mx1.example.com",
   "spf_mechanism": "softfail",
   "dmarc_policy": "none",
+  "dmarc_effective": "none",
+  "dmarc_aspf": "relaxed",
+  "dmarc_adkim": "relaxed",
   "dkim_found": "Yes",
   "dkim_selectors": ["selector1"],
+  "dkim_key_info": "RSA 2048-bit",
   "platform": "Microsoft 365",
   "mta_sts": "No",
+  "mta_sts_mode": "none",
   "dane_tlsa": "No",
+  "dnssec": "No",
   "rbl_clean": "Yes",
+  "routing_risk": "No",
+  "echospoof_risk": "No",
   "remediation": [
     {
       "priority": "CRITICAL",
@@ -375,6 +345,31 @@ python spoofscore.py -f 1000-domains.txt -o scan.csv --smtp-threads 30
 
 ---
 
+## Research
+
+SpoofScore was built for and validated in academic research. We scanned **900 government domains** across 10 ASEAN nations and 4 comparative countries as part of a study presented at IDSECCONF 2026.
+
+Key findings from the scan:
+- **367 out of 900** government domains (40.8%) are spoofable
+- Average email security score: **37.9/100** (Grade D)
+- **Zero** domains achieved Grade A
+- **97** domains vulnerable to Ghost-Sender gateway bypass
+- **520** domains share multi-tenant SPF infrastructure (BreakSPF exposure)
+
+If you use SpoofScore in your research, please cite us:
+
+```bibtex
+@software{spoofscore,
+  author = {Ahmad Al Harrizuan Bin Izadin},
+  title = {SpoofScore: 11-Layer Email Security Scanner},
+  version = {3.0.0},
+  url = {https://github.com/harrizuan/spoofscore},
+  year = {2026}
+}
+```
+
+---
+
 ## Notes
 
 > [!TIP]
@@ -382,10 +377,10 @@ python spoofscore.py -f 1000-domains.txt -o scan.csv --smtp-threads 30
 > Most ISPs and cloud providers block outbound port 25 on home connections.
 
 - Python 3.8+ required. Only one dependency: `dnspython`
-- DKIM probes 80+ selectors. Custom selectors may still be missed
-- RBL checks query 10 major blocklist zones. Some zones may rate limit
-- Layer 9 checks for Ghost-Sender routing risk (indirect MX to Exchange Online)
-- This is a point in time scan. DNS records and mail server configs change
+- DKIM probes 80+ selectors covering all major providers. Custom selectors may still be missed
+- RBL checks query 40 major blocklist zones. Some zones may rate-limit
+- Layer 10 checks for Ghost-Sender and EchoSpoofing supply-chain risks
+- This is a point-in-time scan. DNS records and mail server configs change
 
 ```bash
 pip install dnspython
@@ -400,7 +395,7 @@ pip install dnspython
 ---
 
 <p align="center">
-  <sub>Built by <a href="https://www.tfsec.org">bau1u</a>. One dependency. Nine layers. One answer.</sub><br>
+  <sub>Built by <a href="https://www.tfsec.org">bau1u</a>. One dependency. Eleven layers. One answer.</sub><br>
   <b>Can someone impersonate your domain?</b><br>
   <sub>Find out in seconds.</sub>
 </p>
